@@ -1,0 +1,31 @@
+{
+  "member": {
+    "id": "member-1",
+    "name": "Nguyễn Minh An",
+    "position": "Chủ tịch Hội",
+    "jobTitle": "Giám đốc",
+    "company": "Công ty TNHH Minh An",
+    "initials": "MA",
+    "isBoard": true,
+    "avatar": null,
+    "birthDate": "1982-05-16",
+    "phone": "0911000001",
+    "email": "minhan@example.com",
+    "joinedAt": "2026-07-01",
+    "status": "active"
+  },
+  "fee": {
+    "id": "fee-2026",
+    "year": 2026,
+    "title": "Hội phí thường niên 2026",
+    "amount": 2000000,
+    "date": "2026-10-01",
+    "status": "paid",
+    "reference": "HP-2026-004",
+    "memberId": "member-4"
+  },
+  "settings": {
+    "phone": "0909 123 456",
+    "email": "hotro@example.com"
+  }
+}

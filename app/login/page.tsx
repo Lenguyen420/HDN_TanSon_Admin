@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
-import LoginForm from "@/components/auth/LoginForm";
+import LoginScreen from "@/components/login/LoginPage";
 
 export const metadata: Metadata = {
   title: "Đăng nhập quản trị",
-  description: "Đăng nhập hệ thống quản trị hành chính công",
+  description: "Đăng nhập hệ thống quản trị Hội Doanh nghiệp Phường Tân Sơn",
 };
 
 export default function LoginPage() {
-  return <LoginForm />;
+  return <LoginScreen />;
 }

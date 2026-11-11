@@ -1,9 +1,10 @@
 "use client";
 
+import { notify, flashSuccess } from "@/lib/notify";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 
-import { clearAdminAuth } from "@/services/auth.service";
+import { authApi } from "@/api";
 
 export default function LogoutButton() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -14,30 +15,24 @@ export default function LogoutButton() {
     }
 
     setIsLoggingOut(true);
-    clearAdminAuth();
 
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-        },
-        cache: "no-store",
-      });
-    } finally {
+      await authApi.logout();
+      flashSuccess("Đã đăng xuất.");
       window.location.replace("/login");
+    } catch (cause) {
+      notify.error(
+        cause instanceof Error ? cause.message : "Không thể đăng xuất.",
+      );
+      setIsLoggingOut(false);
     }
   }
 
   return (
-    <div className="border-l border-white/15 pl-2">
+    <div className="logout-container">
       <button
         aria-label="Đăng xuất"
-        className="
-          flex h-9 items-center justify-center gap-2 rounded-lg px-2
-          text-white/85 transition hover:bg-white/15 hover:text-white
-          disabled:cursor-not-allowed disabled:opacity-60
-        "
+        className="icon-button logout-button"
         disabled={isLoggingOut}
         onClick={() => void handleLogout()}
         title="Đăng xuất"

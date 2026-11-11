@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="220" viewBox="0 0 600 220" fill="none">
+  <defs>
+    <pattern id="lines" width="38" height="38" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)">
+      <path d="M0 0V38" stroke="white" stroke-opacity=".12" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="fade" x1="240" y1="40" x2="600" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white" stop-opacity=".08"/>
+      <stop offset="1" stop-color="white" stop-opacity=".48"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#lines)" d="M0 0h600v220H0z"/>
+  <g stroke="url(#fade)" stroke-width="1.1">
+    <path d="M245-60C440-40 295 150 650 140"/>
+    <path d="M265-60C460-40 315 166 650 156"/>
+    <path d="M285-60C480-40 335 182 650 172"/>
+    <path d="M305-60C500-40 355 198 650 188"/>
+    <path d="M325-60C520-40 375 214 650 204"/>
+    <path d="M345-60C540-40 395 230 650 220"/>
+    <path d="M365-60C560-40 415 246 650 236"/>
+    <path d="M385-60C580-40 435 262 650 252"/>
+  </g>
+</svg>

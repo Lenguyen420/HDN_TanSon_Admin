@@ -12,10 +12,6 @@ function isProtectedPage(pathname: string) {
   return pathname === "/" || pathname.startsWith("/admin");
 }
 
-function isProtectedApi(pathname: string) {
-  return pathname.startsWith("/api/backend");
-}
-
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const isAuthenticated = hasAuthCookie(request);
@@ -26,13 +22,6 @@ export function proxy(request: NextRequest) {
     }
 
     return NextResponse.redirect(new URL(DASHBOARD_PATH, request.url));
-  }
-
-  if (isProtectedApi(pathname) && !isAuthenticated) {
-    return NextResponse.json(
-      { message: "Vui lòng đăng nhập để tiếp tục." },
-      { status: 401 },
-    );
   }
 
   if (isProtectedPage(pathname) && !isAuthenticated) {
@@ -46,5 +35,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/admin/:path*", "/api/backend/:path*"],
+  matcher: ["/", "/login", "/admin/:path*"],
 };

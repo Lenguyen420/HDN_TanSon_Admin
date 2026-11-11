@@ -1,30 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
-
-const AUTH_COOKIE_NAMES = [
-  "admin_session",
-  "admin_access_token",
-  "admin_refresh_token",
-];
-
+import { NextRequest } from "next/server";
+import {
+  backendRequest,
+  clearCookies,
+  json,
+  sameOrigin,
+  unavailable,
+} from "@/lib/backend";
 export async function POST(request: NextRequest) {
-  const acceptsJson = request.headers.get("accept")?.includes("application/json");
-  const response = acceptsJson
-    ? NextResponse.json({ success: true, message: "Đã đăng xuất." })
-    : NextResponse.redirect(new URL("/login", request.url), {
-        status: 303,
+  if (!sameOrigin(request))
+    return json({ message: "Yêu cầu không hợp lệ." }, 403);
+  const refreshToken = request.cookies.get("admin_refresh_token")?.value;
+  try {
+    if (refreshToken) {
+      const response = await backendRequest("/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
       });
-
-  for (const name of AUTH_COOKIE_NAMES) {
-    response.cookies.set({
-      name,
-      value: "",
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 0,
-    });
+      if (!response.ok) return unavailable();
+    }
+    return clearCookies(json({ success: true, message: "Đã đăng xuất." }));
+  } catch {
+    return unavailable();
   }
-
-  return response;
 }
