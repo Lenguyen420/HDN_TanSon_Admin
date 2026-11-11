@@ -1,4 +1,5 @@
-import { memberApi, registrationApi } from "@/api";
+import { memberApi, registrationApi, settingsApi } from "@/api";
+import { settingsFields, type SettingsPayload } from "../api/settingsApi";
 import {
   contentApis,
   contentCollections,
@@ -40,6 +41,17 @@ function changed() {
 export function subscribeMembers(callback: () => void) {
   window.addEventListener(CHANGED, callback);
   return () => window.removeEventListener(CHANGED, callback);
+}
+export function getAssociationSettings() {
+  return settingsApi.get();
+}
+export async function saveAssociationSettings(record: AssociationRecord) {
+  const values = Object.fromEntries(
+    settingsFields.map((key) => [key, String(record[key] ?? "")]),
+  ) as SettingsPayload;
+  const settings = await settingsApi.update(values);
+  changed();
+  return settings;
 }
 export function listMembers() {
   return listCollection("members");

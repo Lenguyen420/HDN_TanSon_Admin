@@ -6,7 +6,7 @@ Frontend Next.js 16 chạy tại http://localhost:3003, kết nối backend Expr
 
 - Đăng nhập, refresh, đăng xuất, quản lý hội viên, Ban chấp hành và hồ sơ đăng ký dùng backend Express hiện tại.
 - Duyệt hồ sơ tạo hội viên bằng transaction MongoDB; lưu lịch sử quyết định, hỗ trợ từ chối kèm lý do.
-- Tin tức, sự kiện, thăm hội viên, thông báo và banner dùng API Express và lưu MongoDB. Hội phí, tài trợ, lịch sử tham gia và cài đặt Hội còn lưu trong trình duyệt. Các danh sách khởi tạo trống.
+- Tin tức, sự kiện, thăm hội viên, thông báo và banner dùng API Express và lưu MongoDB. Thông tin Hội dùng API cấu hình chung trên MongoDB. Hội phí, tài trợ và lịch sử tham gia còn lưu trong trình duyệt. Các danh sách khởi tạo trống.
 - Không nạp dữ liệu mẫu hoặc tự chuyển dữ liệu cũ lên backend. Dữ liệu đã có trên MongoDB được giữ nguyên.
 - Dữ liệu cục bộ dùng khóa localStorage `tanson-association-admin-v1`. Lần đọc đầu sau cập nhật sẽ loại các bản ghi minh họa cũ chưa chỉnh sửa và xóa các thông tin liên hệ mặc định giả lập. Bản ghi tự nhập và các bản ghi đã chỉnh sửa được giữ lại. Dữ liệu lỗi được báo để xử lý, không tự ghi đè.
 - Tên Hội, khẩu hiệu, logo và ảnh nhận diện giao diện vẫn được giữ.
@@ -109,3 +109,15 @@ Get-Process node | Sort-Object WorkingSet64 -Descending | Select-Object Id, @{Na
 ```
 
 Các công cụ IDE cũng dùng Node. Đối chiếu PID và lệnh khởi chạy trong Task Manager trước khi kết luận toàn bộ RAM Node là của dashboard. Khi so sánh trước/sau, dùng cùng các trang và cùng khoảng thời gian; số đo ngay sau khi khởi động lại chưa thể chứng minh đã khắc phục rò rỉ bộ nhớ.
+
+## Ảnh tải lên
+
+Ảnh chọn từ máy được thu nhỏ và gửi cùng yêu cầu lưu nội dung. Backend ghi file vào uploads/news, uploads/events, uploads/member-visits hoặc uploads/banners; trường image trên MongoDB chỉ lưu đường dẫn dạng uploads/news/<uuid>.webp. Frontend chuyển đường dẫn này thành /uploads/... để hiển thị thông qua route cùng origin, không cần công khai địa chỉ backend trên trình duyệt. URL ảnh cũ và ảnh tĩnh tiếp tục hiển thị. File đã lưu không bị xóa khi hủy chỉnh sửa hoặc xóa mềm nội dung; backend dọn file mới nếu yêu cầu lưu database thất bại.
+
+## API Thông tin Hội
+
+Phần Cấu hình → Thông tin Hội dùng GET và PUT /api/association/settings, chuyển tiếp tới /api/v1/admin/settings bằng cookie HttpOnly. Service nằm ở api/settingsApi.ts; hook dữ liệu lấy settings từ backend, gồm thông tin giới thiệu, liên hệ và trợ lý sự kiện. Bản sao JSON cũng lấy cấu hình đang tải từ API.
+
+Backend lưu duy nhất một bản cấu hình có id association trong collection association_settings. Tên Hội và khẩu hiệu bắt buộc; các trường tùy chọn bỏ qua hoặc gửi chuỗi rỗng khi PUT sẽ được xóa về rỗng. Form gửi đầy đủ các trường, khóa thao tác trong lúc lưu, hiển thị lỗi API và cập nhật dữ liệu khi thành công. Email, số điện thoại, URL HTTPS và câu hỏi dạng câu hỏi | câu trả lời được kiểm tra trên backend. Logo nhận diện vẫn dùng ảnh cố định hiện tại.
+
+GET /api/v1/public/settings dành cho Mini App, không yêu cầu token và không trả thông tin người sửa. Cấu hình localStorage cũ không tự đưa lên MongoDB hoặc dùng thay thế khi backend lỗi. Mặc định giữ tên Hội và khẩu hiệu hiện có, các thông tin liên hệ/trợ lý để trống tới khi lưu lần đầu. Mini App chưa được sửa trong công việc này.

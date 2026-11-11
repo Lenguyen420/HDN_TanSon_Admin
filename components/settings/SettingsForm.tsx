@@ -4,11 +4,8 @@ import Image from "next/image";
 import { notify } from "@/lib/notify";
 import { useState, type FormEvent } from "react";
 import { Download, Save } from "lucide-react";
-import {
-  readAssociationData,
-  saveAssociationData,
-  type AssociationRecord,
-} from "@/services/association-store";
+import type { AssociationRecord } from "@/services/association-store";
+import { saveAssociationSettings } from "@/services/association-api";
 import { useAssociationData } from "@/components/shared/association/useAssociationData";
 
 const groups = [
@@ -51,11 +48,13 @@ const groups = [
 export default function SettingsForm() {
   const { data, error } = useAssociationData();
   const [failure, setFailure] = useState("");
-  function save(event: FormEvent<HTMLFormElement>) {
+  const [saving, setSaving] = useState(false);
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
+    setSaving(true);
     const form = new FormData(event.currentTarget);
     try {
-      const next = readAssociationData();
       const settings: AssociationRecord = { id: "association" };
       for (const { fields } of groups)
         for (const [key] of fields)
@@ -76,14 +75,16 @@ export default function SettingsForm() {
           )
       )
         throw new Error("Mỗi câu hỏi cần có dạng: câu hỏi | câu trả lời.");
-      saveAssociationData({ ...next, settings });
-      notify.success("Đã lưu thông tin Hội trên trình duyệt.");
+      await saveAssociationSettings(settings);
+      notify.success("Đã lưu thông tin Hội.");
       setFailure("");
     } catch (cause) {
       const message =
         cause instanceof Error ? cause.message : "Không thể lưu thông tin.";
       setFailure(message);
       notify.error(message);
+    } finally {
+      setSaving(false);
     }
   }
   function backup() {
@@ -109,7 +110,7 @@ export default function SettingsForm() {
         <button
           className="button button-secondary"
           onClick={backup}
-          disabled={!data || Boolean(error)}
+          disabled={!data || Boolean(error) || saving}
         >
           <Download size={17} />
           Xuất bản sao dữ liệu
@@ -125,7 +126,11 @@ export default function SettingsForm() {
           {error ? "Không thể đọc dữ liệu." : "Đang tải thông tin…"}
         </div>
       ) : (
-        <form key={data.updatedAt} onSubmit={save} className="settings-layout">
+        <form
+          key={String(data.settings.updatedAt ?? "initial")}
+          onSubmit={save}
+          className="settings-layout"
+        >
           <div className="settings-form">
             {groups.map((group) => (
               <section className="panel settings-section" key={group.title}>
@@ -148,6 +153,7 @@ export default function SettingsForm() {
                       {type === "textarea" ? (
                         <textarea
                           name={key}
+                          disabled={saving}
                           rows={key === "assistantQuestions" ? 6 : 4}
                           defaultValue={String(data.settings[key] || "")}
                         />
@@ -155,6 +161,7 @@ export default function SettingsForm() {
                         <input
                           name={key}
                           type={type || "text"}
+                          disabled={saving}
                           defaultValue={String(data.settings[key] || "")}
                           required={["name", "slogan"].includes(key)}
                         />
@@ -165,10 +172,16 @@ export default function SettingsForm() {
               </section>
             ))}
             <div className="settings-save">
-              <p>Thay đổi chỉ lưu trên trình duyệt này.</p>
-              <button className="button button-primary" type="submit">
+              <p>
+                Thông tin được lưu trên hệ thống và dùng chung cho các thiết bị.
+              </p>
+              <button
+                className="button button-primary"
+                type="submit"
+                disabled={saving}
+              >
                 <Save size={17} />
-                Lưu thông tin Hội
+                {saving ? "Đang lưu…" : "Lưu thông tin Hội"}
               </button>
             </div>
           </div>
@@ -185,12 +198,13 @@ export default function SettingsForm() {
             <hr />
             <strong>Phạm vi dữ liệu</strong>
             <p>
-              Hội viên và hồ sơ đăng ký được lưu trên MongoDB. Thông tin Hội và
-              các nội dung khác hiện được lưu trên trình duyệt.
+              Thông tin Hội, hội viên, hồ sơ đăng ký và nội dung được lưu trên
+              hệ thống. Hội phí, tài trợ và lịch sử tham gia còn lưu trên trình
+              duyệt.
             </p>
             <p>
-              Xuất bản sao dữ liệu để giữ lại các thay đổi trước khi xóa bộ nhớ
-              trình duyệt.
+              Bản sao gồm thông tin Hội, dữ liệu đã tải từ hệ thống và dữ liệu
+              cục bộ trên thiết bị này.
             </p>
           </aside>
         </form>

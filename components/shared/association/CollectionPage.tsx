@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { imageUrl } from "@/services/image-url";
 import { notify } from "@/lib/notify";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -140,7 +141,7 @@ function DetailDialog({
                   {field.key === "image" && value ? (
                     <Image
                       unoptimized
-                      src={String(value)}
+                      src={imageUrl(value)}
                       alt={String(
                         record.alt || record.title || "Hình ảnh nội dung",
                       )}
@@ -486,7 +487,7 @@ export default function CollectionPage({ section }: { section: string }) {
                           ) : column === "image" && value ? (
                             <Image
                               unoptimized
-                              src={String(value)}
+                              src={imageUrl(value)}
                               alt={String(record.alt || "Banner")}
                               width={100}
                               height={56}

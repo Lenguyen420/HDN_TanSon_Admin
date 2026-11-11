@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { imageUrl } from "@/services/image-url";
 import { notify } from "@/lib/notify";
 import { useEffect, useId, useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
@@ -73,7 +74,7 @@ export default function ImagePicker({
       <input type="hidden" name={name} value={removed ? "" : value} />
       {source && (
         <Image
-          src={source}
+          src={imageUrl(source)}
           alt="Ảnh đã chọn"
           width={400}
           height={220}

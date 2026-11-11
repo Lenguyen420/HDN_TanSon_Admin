@@ -10,6 +10,7 @@ import {
   listMembers,
   listRegistrations,
   listContent,
+  getAssociationSettings,
   subscribeMembers,
 } from "@/services/association-api";
 export function useAssociationData() {
@@ -22,14 +23,16 @@ export function useAssociationData() {
       const current = ++revision;
       try {
         const local = readAssociationData();
-        const [members, registrations, content] = await Promise.all([
+        const [members, registrations, content, settings] = await Promise.all([
           listMembers(),
           listRegistrations(),
           listContent(),
+          getAssociationSettings(),
         ]);
         if (cancelled || current !== revision) return;
         setData({
           ...local,
+          settings,
           collections: {
             ...local.collections,
             ...content,

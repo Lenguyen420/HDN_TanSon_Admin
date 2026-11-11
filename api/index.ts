@@ -6,6 +6,8 @@ export {
   notificationsApi,
   bannersApi,
 } from "./contentApi.ts";
+export { settingsApi } from "./settingsApi.ts";
+export type { AssociationSettings, SettingsPayload } from "./settingsApi.ts";
 export { memberApi } from "./memberApi.ts";
 export { registrationApi } from "./registrationApi.ts";
 export { ApiError, isApiError } from "./apiError.ts";

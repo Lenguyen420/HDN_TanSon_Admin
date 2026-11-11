@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Image from "next/image";
+import { imageUrl } from "@/services/image-url";
 import Link from "next/link";
 import {
   ArrowDownLeft,
@@ -324,7 +325,7 @@ export default function DashboardPage() {
                     <div className="news-thumb">
                       {article.image ? (
                         <Image
-                          src={String(article.image)}
+                          src={imageUrl(article.image)}
                           alt=""
                           fill
                           unoptimized
@@ -409,8 +410,9 @@ export default function DashboardPage() {
         <div className="local-data-note">
           <span className="live-dot" />
           <p>
-            Số liệu hội viên, hồ sơ đăng ký và nội dung lấy từ hệ thống. Hội phí,
-            tài trợ và lịch sử tham gia lấy từ dữ liệu trên trình duyệt này.
+            Số liệu hội viên, hồ sơ đăng ký và nội dung lấy từ hệ thống. Hội
+            phí, tài trợ và lịch sử tham gia lấy từ dữ liệu trên trình duyệt
+            này.
           </p>
         </div>
       </div>
