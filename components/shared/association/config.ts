@@ -29,6 +29,8 @@ export type Field = {
     | "checkbox"
     | "paragraphs"
     | "agenda"
+    | "time-range"
+    | "event-files"
     | "image";
   required?: boolean;
   options?: [string, string][];
@@ -149,7 +151,7 @@ export const sections: Record<string, SectionConfig> = {
     title: "Sự kiện",
     singular: "sự kiện",
     description: "Tổ chức các chương trình giao lưu và kết nối doanh nhân.",
-    columns: ["title", "event.date", "event.venue", "status"],
+    columns: ["title", "event.date", "event.time", "event.venue", "status"],
     fields: [
       ...article,
       {
@@ -158,14 +160,27 @@ export const sections: Record<string, SectionConfig> = {
         type: "date",
         required: true,
       },
-      { key: "event.time", label: "Khung giờ", required: true },
+      {
+        key: "event.time",
+        label: "Khung giờ",
+        type: "time-range",
+        required: true,
+      },
       { key: "event.venue", label: "Địa điểm", required: true },
       { key: "event.address", label: "Địa chỉ", required: true },
+      { key: "event.host", label: "Đơn vị tổ chức" },
+      {
+        key: "event.checkInEnabled",
+        label: "Mở điểm danh trên Mini App trong ngày diễn ra sự kiện",
+        type: "checkbox",
+      },
       {
         key: "event.agenda",
-        label: "Lịch trình (mỗi dòng: giờ | nội dung)",
+        label: "Lịch trình chương trình",
         type: "agenda",
       },
+      { key: "event.documents", label: "Tài liệu", type: "event-files" },
+      { key: "event.minutes", label: "Biên bản", type: "event-files" },
     ],
   },
   "member-visits": {
@@ -423,6 +438,7 @@ export const labels: Record<string, string> = {
   topic: "Chuyên mục",
   publishedAt: "Ngày công bố",
   "event.date": "Ngày tổ chức",
+  "event.time": "Khung giờ",
   "event.venue": "Địa điểm",
   "visit.company": "Doanh nghiệp",
   "visit.date": "Ngày thăm",

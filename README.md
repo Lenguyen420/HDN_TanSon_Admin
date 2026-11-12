@@ -48,6 +48,10 @@ Backend nằm tại `D:\HDN_TanSon_Backend\hdn_tanson_be`. Chạy `npm run start
 
 ## Gọi API từ giao diện
 
+Biểu mẫu Sự kiện đồng bộ với Mini App: ngày tổ chức, giờ bắt đầu/kết thúc, địa điểm, địa chỉ, đơn vị tổ chức, lịch trình theo từng mục, bật/tắt điểm danh, tài liệu và biên bản. Khung giờ vẫn gửi dưới dạng `HH:mm - HH:mm` trong `event.time`; lịch trình lưu mảng `{ time, title }`. Tài liệu/biên bản không bắt buộc: lưu sự kiện trước và sửa bổ sung sau, các dòng chưa nhập gì sẽ được bỏ qua. Chọn PDF, Word, Excel, PowerPoint hoặc ảnh từ máy, tối đa 4 MB/file; file được tải khi lưu, cất trong MongoDB GridFS. Mỗi mục lưu `{ id, title, url, publishedAt? }`; liên kết HTTPS cũ được giữ nguyên khi sửa. Chức năng điểm danh trên Mini App chỉ mở khi sự kiện đã công bố, trong ngày diễn ra sự kiện và quản trị viên bật tiếp nhận; người dùng phải gửi xác nhận để được ghi nhận tham dự.
+
+API tải file `POST /api/association/event-files` dùng chung route proxy hiện có, chuyển tiếp bytes gốc tới `POST /api/v1/admin/event-files`. Admin mở file qua `/uploads/event-files/:id`; Mini App mở qua `/api/v1/public/event-files/:id` trên backend. Không tăng số route động. Triển khai backend trước, sau đó Admin và Mini App để có API và hỗ trợ đường dẫn file mới.
+
 Cấu trúc service theo mẫu `FE_Admin_CTS/src/api`, dùng TypeScript phù hợp dự án hiện tại:
 
 ```ts

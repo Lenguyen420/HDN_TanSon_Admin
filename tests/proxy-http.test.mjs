@@ -10,9 +10,37 @@ test(
   { timeout: 30000 },
   async () => {
     const received = [];
+    const fileBytes = Buffer.from([
+      37, 80, 68, 70, 45, 49, 46, 52, 10, 0, 255, 128,
+    ]);
+    const fileId = "00000000-0000-4000-8000-000000000000";
     const backend = createServer(async (req, res) => {
-      let text = "";
-      for await (const chunk of req) text += chunk;
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      const bytes = Buffer.concat(chunks);
+      if (req.url === "/api/v1/admin/event-files") {
+        assert.deepEqual(bytes, fileBytes);
+        assert.equal(
+          req.headers["x-file-name"],
+          encodeURIComponent("Tài liệu.pdf"),
+        );
+        assert.equal(req.headers.authorization, "Bearer test-access");
+        res.writeHead(201, { "Content-Type": "application/json" });
+        return res.end(
+          JSON.stringify({
+            data: { url: `/api/v1/public/event-files/${fileId}` },
+          }),
+        );
+      }
+      if (req.url === `/api/v1/public/event-files/${fileId}`) {
+        res.writeHead(200, {
+          "Content-Type": "application/pdf",
+          "Content-Length": String(fileBytes.length),
+          "Content-Disposition": "inline; filename=event.pdf",
+        });
+        return res.end(req.method === "HEAD" ? undefined : fileBytes);
+      }
+      const text = bytes.toString();
       received.push({
         path: req.url,
         method: req.method,
@@ -158,6 +186,35 @@ test(
       assert.equal(limited.status, 429);
       assert.equal(limited.headers.get("retry-after"), "30");
       assert.equal((await limited.json()).message, "Try later");
+      const uploaded = await fetch(base + "/api/association/event-files", {
+        method: "POST",
+        headers: {
+          Cookie: "admin_access_token=test-access",
+          "Content-Type": "application/octet-stream",
+          "X-File-Name": encodeURIComponent("Tài liệu.pdf"),
+        },
+        body: fileBytes,
+      });
+      assert.equal(uploaded.status, 201);
+      assert.equal(
+        (await uploaded.json()).data.url,
+        `/api/v1/public/event-files/${fileId}`,
+      );
+      const downloaded = await fetch(base + `/uploads/event-files/${fileId}`);
+      assert.equal(downloaded.headers.get("content-type"), "application/pdf");
+      assert.equal(
+        downloaded.headers.get("content-disposition"),
+        "inline; filename=event.pdf",
+      );
+      assert.deepEqual(Buffer.from(await downloaded.arrayBuffer()), fileBytes);
+      const head = await fetch(base + `/uploads/event-files/${fileId}`, {
+        method: "HEAD",
+      });
+      assert.equal(
+        head.headers.get("content-length"),
+        String(fileBytes.length),
+      );
+      assert.equal((await head.arrayBuffer()).byteLength, 0);
     } finally {
       child.kill();
       if (child.exitCode === null) await once(child, "exit");

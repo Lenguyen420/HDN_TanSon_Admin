@@ -92,6 +92,6 @@ test("member portrait URLs are preserved in admin create/update payloads and can
     return {data:{data:{...body,id:"portrait-member"}},status:200,statusText:"OK",headers:{},config};
   };
   await saveRecord("members", {id:"portrait-member",name:"Hội viên",company:"Công ty",avatar:"https://example.com/photo.jpg"});
-  await saveRecord("members", {id:"portrait-member",name:"Hội viên",company:"Công ty",avatar:""}, undefined, true);
+  await saveRecord("members", {id:"portrait-member",name:"Hội viên",company:"Công ty",avatar:""}, true);
   assert.deepEqual(sent,["https://example.com/photo.jpg",""]);
 });

@@ -14,6 +14,13 @@ import { notify } from "@/lib/notify";
 import type { SectionConfig } from "./config";
 import ImagePicker, { readSelectedImage } from "./ImagePicker";
 import TopicPicker from "./TopicPicker";
+import {
+  AgendaField,
+  EventFilesField,
+  TimeRangeField,
+} from "@/components/events/EventFields";
+import { readAgenda, readTimeRange } from "@/services/event-form";
+import { readSelectedEventFiles } from "@/services/api/eventFilesApi";
 
 export default function RecordDialog({
   config,
@@ -49,10 +56,22 @@ export default function RecordDialog({
       : { id: crypto.randomUUID() };
     try {
       for (const field of config.fields) {
+        if (field.type === "agenda" || field.type === "event-files") {
+          setValue(
+            next,
+            field.key,
+            field.type === "agenda"
+              ? readAgenda(form, field.key)
+              : await readSelectedEventFiles(form, field.key),
+          );
+          continue;
+        }
         const text =
           field.type === "image"
             ? await readSelectedImage(form, field.key)
-            : String(form.get(field.key) ?? "").trim();
+            : field.type === "time-range"
+              ? readTimeRange(form, field.key)
+              : String(form.get(field.key) ?? "").trim();
         if (field.required && field.type !== "checkbox" && !text)
           throw new Error(
             `Vui lòng nhập ${field.label.toLocaleLowerCase("vi")}.`,
@@ -77,23 +96,6 @@ export default function RecordDialog({
             .split("\n")
             .map((line) => line.trim())
             .filter(Boolean);
-        if (field.type === "agenda")
-          value = text
-            ? text
-                .split("\n")
-                .filter((line) => line.trim())
-                .map((line) => {
-                  const separator = line.indexOf("|");
-                  if (separator < 1 || !line.slice(separator + 1).trim())
-                    throw new Error(
-                      "Mỗi dòng lịch trình cần có dạng: 08:00 | Đón tiếp hội viên.",
-                    );
-                  return {
-                    time: line.slice(0, separator).trim(),
-                    title: line.slice(separator + 1).trim(),
-                  };
-                })
-            : [];
         setValue(next, field.key, value);
       }
       if (config.collection === "members") {
@@ -193,17 +195,28 @@ export default function RecordDialog({
               const textValue =
                 field.type === "paragraphs" && Array.isArray(value)
                   ? value.join("\n")
-                  : field.type === "agenda" && Array.isArray(value)
-                    ? value
-                        .map((item) =>
-                          typeof item === "object" &&
-                          item !== null &&
-                          !Array.isArray(item)
-                            ? `${item.time} | ${item.title}`
-                            : "",
-                        )
-                        .join("\n")
-                    : String(value ?? "");
+                  : String(value ?? "");
+              if (
+                ["time-range", "agenda", "event-files"].includes(
+                  field.type ?? "",
+                )
+              ) {
+                const Editor =
+                  field.type === "time-range"
+                    ? TimeRangeField
+                    : field.type === "agenda"
+                      ? AgendaField
+                      : EventFilesField;
+                return (
+                  <Editor
+                    key={field.key}
+                    name={field.key}
+                    label={field.label}
+                    value={value}
+                    required={field.required}
+                  />
+                );
+              }
               if (field.type === "topic")
                 return (
                   <TopicPicker
@@ -235,7 +248,7 @@ export default function RecordDialog({
               return (
                 <label
                   key={field.key}
-                  className={`form-field ${["textarea", "paragraphs", "agenda"].includes(field.type || "") ? "full-width" : ""} ${field.type === "checkbox" ? "checkbox-field" : ""}`}
+                  className={`form-field ${["textarea", "paragraphs"].includes(field.type || "") ? "full-width" : ""} ${field.type === "checkbox" ? "checkbox-field" : ""}`}
                 >
                   <span>
                     {field.label}
@@ -270,9 +283,7 @@ export default function RecordDialog({
                         </option>
                       ))}
                     </select>
-                  ) : ["textarea", "paragraphs", "agenda"].includes(
-                      field.type || "",
-                    ) ? (
+                  ) : ["textarea", "paragraphs"].includes(field.type || "") ? (
                     <textarea
                       name={field.key}
                       defaultValue={textValue}

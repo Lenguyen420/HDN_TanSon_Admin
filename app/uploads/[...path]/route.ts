@@ -5,15 +5,22 @@ type Context = { params: Promise<{ path: string[] }> };
 
 async function handle(request: NextRequest, context: Context) {
   const { path } = await context.params;
+  const isFile =
+    path.length === 2 &&
+    path[0] === "event-files" &&
+    /^[a-f0-9-]{36}$/.test(path[1]);
   if (
-    path.length !== 2 ||
-    !["news", "events", "member-visits", "banners"].includes(path[0]) ||
-    !/^[a-f0-9-]{36}\.(jpg|png|webp)$/.test(path[1])
+    !isFile &&
+    (path.length !== 2 ||
+      !["news", "events", "member-visits", "banners"].includes(path[0]) ||
+      !/^[a-f0-9-]{36}\.(jpg|png|webp)$/.test(path[1]))
   )
     return json({ message: "Không tìm thấy ảnh." }, 404);
   try {
     const url = new URL(
-      "/uploads/" + path.map(encodeURIComponent).join("/"),
+      isFile
+        ? `/api/v1/public/event-files/${path[1]}`
+        : "/uploads/" + path.map(encodeURIComponent).join("/"),
       backendUrl("/"),
     );
     const response = await fetch(url, {
@@ -33,6 +40,9 @@ async function handle(request: NextRequest, context: Context) {
       "X-Content-Type-Options": "nosniff",
     });
     const length = response.headers.get("content-length");
+    const disposition = response.headers.get("content-disposition");
+    if (disposition) headers.set("Content-Disposition", disposition);
+    if (isFile) headers.set("Content-Security-Policy", "sandbox");
     if (length) headers.set("Content-Length", length);
     return new Response(request.method === "HEAD" ? null : response.body, {
       status: 200,

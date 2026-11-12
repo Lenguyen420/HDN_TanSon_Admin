@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { imageUrl } from "@/services/image-url";
 import { notify } from "@/lib/notify";
+import { isEventFileUrl, eventFileHref } from "@/services/event-form";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
@@ -130,7 +131,7 @@ function DetailDialog({
               <div
                 key={field.key}
                 className={
-                  ["paragraphs", "textarea", "agenda"].includes(
+                  ["paragraphs", "textarea", "agenda", "event-files"].includes(
                     field.type || "",
                   )
                     ? "full-width"
@@ -166,6 +167,38 @@ function DetailDialog({
                           : ""}
                       </p>
                     ))
+                  ) : field.type === "event-files" && Array.isArray(value) ? (
+                    value.length ? (
+                      value.map((item, index) => {
+                        if (
+                          !item ||
+                          typeof item !== "object" ||
+                          Array.isArray(item)
+                        )
+                          return null;
+                        const url = String(item.url ?? "");
+                        return (
+                          <p key={String(item.id ?? index)}>
+                            {isEventFileUrl(url) ? (
+                              <a
+                                href={eventFileHref(url)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {String(item.title)}
+                              </a>
+                            ) : (
+                              String(item.title)
+                            )}
+                            {item.publishedAt
+                              ? ` · ${formatDate(item.publishedAt)}`
+                              : ""}
+                          </p>
+                        );
+                      })
+                    ) : (
+                      "Chưa có file."
+                    )
                   ) : Array.isArray(value) ? (
                     value.map((item, index) => (
                       <p key={index}>{String(item)}</p>
@@ -246,7 +279,8 @@ export default function CollectionPage({ section }: { section: string }) {
   const [notificationTarget, setNotificationTarget] = useState("");
   useEffect(() => {
     if (section !== "registrations") return;
-    const target = new URLSearchParams(window.location.search).get("registrationId") || "";
+    const target =
+      new URLSearchParams(window.location.search).get("registrationId") || "";
     const timer = window.setTimeout(() => setNotificationTarget(target), 0);
     return () => window.clearTimeout(timer);
   }, [section]);
@@ -280,20 +314,22 @@ export default function CollectionPage({ section }: { section: string }) {
         ),
     [config, data],
   );
-  const filtered = records.filter((item) => !notificationTarget || item.id === notificationTarget).filter(
-    (item) =>
-      (!status || item.status === status) &&
-      (!query ||
-        normalize(
-          JSON.stringify(item) +
-            " " +
-            String(
-              data?.collections.members.find(
-                (member) => member.id === item.memberId,
-              )?.name || "",
-            ),
-        ).includes(normalize(query))),
-  );
+  const filtered = records
+    .filter((item) => !notificationTarget || item.id === notificationTarget)
+    .filter(
+      (item) =>
+        (!status || item.status === status) &&
+        (!query ||
+          normalize(
+            JSON.stringify(item) +
+              " " +
+              String(
+                data?.collections.members.find(
+                  (member) => member.id === item.memberId,
+                )?.name || "",
+              ),
+          ).includes(normalize(query))),
+    );
   const pages = Math.max(1, Math.ceil(filtered.length / 8));
   const currentPage = Math.min(page, pages);
   const visible = filtered.slice((currentPage - 1) * 8, currentPage * 8);
@@ -346,7 +382,21 @@ export default function CollectionPage({ section }: { section: string }) {
           Thêm {config.singular}
         </button>
       </div>
-      {notificationTarget && <p role="status">Đang xem hồ sơ được chọn từ thông báo. <button type="button" className="button" onClick={() => { setNotificationTarget(""); setPage(1); }}>Xem toàn bộ hồ sơ</button></p>}
+      {notificationTarget && (
+        <p role="status">
+          Đang xem hồ sơ được chọn từ thông báo.{" "}
+          <button
+            type="button"
+            className="button"
+            onClick={() => {
+              setNotificationTarget("");
+              setPage(1);
+            }}
+          >
+            Xem toàn bộ hồ sơ
+          </button>
+        </p>
+      )}
       {error && (
         <p className="error-message" role="alert">
           {error}
@@ -408,7 +458,8 @@ export default function CollectionPage({ section }: { section: string }) {
               placeholder={`Tìm ${config.singular}…`}
               value={query}
               onChange={(event) => {
-                setNotificationTarget(""); setQuery(event.target.value);
+                setNotificationTarget("");
+                setQuery(event.target.value);
                 setPage(1);
               }}
             />
@@ -517,7 +568,10 @@ export default function CollectionPage({ section }: { section: string }) {
                               onClick={() => setDetail(record)}
                             >
                               {["name", "fullName"].includes(column) && (
-                                <MemberAvatar name={String(value || "")} avatar={record.avatar} />
+                                <MemberAvatar
+                                  name={String(value || "")}
+                                  avatar={record.avatar}
+                                />
                               )}
                               <span>
                                 {String(value ?? "—")}

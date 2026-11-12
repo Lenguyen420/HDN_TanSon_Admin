@@ -30,6 +30,25 @@ async function handle(request: NextRequest, context: Context) {
     );
 
   try {
+    if (path[0] === "event-files") {
+      const length = Number(request.headers.get("content-length"));
+      if (length > 4 * 1024 * 1024)
+        return json({ message: "Mỗi file không được vượt quá 4 MB." }, 413);
+      const bytes = await request.arrayBuffer();
+      if (bytes.byteLength > 4 * 1024 * 1024)
+        return json({ message: "Mỗi file không được vượt quá 4 MB." }, 413);
+      return await passResponse(
+        await backendRequest(route.path, {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/octet-stream",
+            "X-File-Name": request.headers.get("x-file-name") ?? "",
+          },
+          body: bytes,
+        }),
+      );
+    }
     return await passResponse(
       await backendRequest(route.path + request.nextUrl.search, {
         method: request.method,
