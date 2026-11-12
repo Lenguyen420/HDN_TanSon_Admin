@@ -8,7 +8,6 @@ import {
   Wallet,
   ClipboardCheck,
   HeartHandshake,
-  Bell,
   Images,
   Settings2,
   LayoutDashboard,
@@ -378,12 +377,6 @@ export const navigation = [
     label: "Thăm hội viên",
     href: "/admin/member-visits",
     icon: Handshake,
-    group: "Nội dung & hoạt động",
-  },
-  {
-    label: "Thông báo",
-    href: "/admin/notifications",
-    icon: Bell,
     group: "Nội dung & hoạt động",
   },
   {

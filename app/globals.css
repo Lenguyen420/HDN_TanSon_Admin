@@ -2135,3 +2135,35 @@ input::placeholder, textarea::placeholder { color: #6b7c94; opacity: 1; }
   .breadcrumb strong { font-size: 14px; }
   .demo-badge { display: none; }
 }
+
+/* Registration notifications in the header. */
+.registration-bell{position:relative;flex-shrink:0}
+.registration-bell-trigger{position:relative;display:grid;place-items:center;width:42px;height:42px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;color:#475569;cursor:pointer;transition:background .18s,box-shadow .18s}
+.registration-bell-trigger:hover,.registration-bell-trigger.is-open{background:#eff6ff;color:#2563eb;box-shadow:0 4px 14px #1d4ed815}
+.registration-bell-trigger:focus-visible{outline:3px solid #93c5fd;outline-offset:3px}
+.registration-bell-badge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;padding:0 5px;border:2px solid white;border-radius:99px;background:#ef4444;color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center}
+.registration-bell-panel{position:absolute;right:0;top:54px;width:min(410px,calc(100vw - 24px));overflow:hidden;border:1px solid #e2e8f0;border-radius:20px;background:#fff;box-shadow:0 20px 64px #0f172a26;z-index:90}
+.registration-bell-panel>header{display:flex;justify-content:space-between;align-items:flex-start;padding:22px 20px 16px;background:linear-gradient(120deg,#eff6ff,#f8fafc)}
+.registration-bell-eyebrow{font-size:9px;font-weight:800;letter-spacing:.14em;color:#64748b}
+.registration-bell-panel h2{display:flex;align-items:center;gap:9px;margin:6px 0;font-size:21px;color:#0f172a}
+.registration-bell-panel h2 span{padding:2px 8px;border-radius:8px;background:#dbeafe;color:#2563eb;font-size:12px}
+.registration-bell-panel header p{margin:0;color:#64748b;font-size:12px}
+.registration-bell-toolbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#64748b}
+.registration-bell-toolbar>span{display:flex;align-items:center;gap:6px}
+.registration-bell-toolbar i{width:6px;height:6px;border-radius:50%;background:#10b981}
+.registration-bell-toolbar button{display:flex;gap:5px;align-items:center;background:none;border:0;color:#2563eb;cursor:pointer;font-size:11px;font-weight:700}
+.registration-bell-toolbar button:disabled{opacity:.45;cursor:default}
+.registration-bell-list{max-height:min(420px,60vh);overflow:auto;overscroll-behavior:contain}
+.registration-bell-item{position:relative;display:flex;align-items:flex-start;gap:12px;padding:17px 20px;border-bottom:1px solid #f1f5f9;color:inherit;text-decoration:none}
+.registration-bell-item:hover{background:#f8fafc}.registration-bell-item.is-unread{background:#f4f8ff}
+.registration-bell-icon{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border:1px solid #dbeafe;border-radius:12px;background:#eff6ff;color:#2563eb}
+.registration-bell-item>div{min-width:0;flex:1}.registration-bell-item strong{font-size:13px;color:#1e293b}
+.registration-bell-item p{margin:5px 0 10px;color:#64748b;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.registration-bell-item small{display:flex;align-items:center;gap:9px;flex-wrap:wrap;color:#94a3b8;font-size:10px}
+.registration-bell-status{padding:3px 7px;border-radius:6px;background:#f1f5f9;color:#64748b;font-weight:700}
+.registration-bell-status.pending{background:#fef3c7;color:#a16207}.registration-bell-status.approved{background:#dcfce7;color:#15803d}.registration-bell-status.rejected{background:#fee2e2;color:#b91c1c}
+.registration-bell-dot{width:6px;height:6px;margin-top:6px;border-radius:50%;background:#3b82f6;flex-shrink:0}
+.registration-bell-footer{display:flex;align-items:center;justify-content:center;gap:7px;padding:15px;background:#fafcff;color:#2563eb;font-size:12px;font-weight:700;text-decoration:none}
+.registration-bell-empty{display:grid;justify-items:center;gap:10px;padding:36px 24px;color:#94a3b8;text-align:center}.registration-bell-empty strong{color:#475569;font-size:13px}.registration-bell-empty p{font-size:12px;margin:0}
+.registration-bell-error{margin:0;padding:12px 20px;background:#fff7ed;color:#9a3412;font-size:12px}
+@media(max-width:640px){.registration-bell-panel{position:fixed;top:74px;right:12px}.registration-bell-trigger{width:38px;height:38px;border-radius:12px}}

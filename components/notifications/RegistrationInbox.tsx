@@ -1,7 +1,7 @@
 "use client";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Bell } from "lucide-react";
+import { Bell, CheckCheck, ChevronRight, ClipboardList, X } from "lucide-react";
 import api from "@/services/api/axiosConfig";
 import { getStoredAdminUser } from "@/services/api/authSession";
 interface Notice { id: string; registrationId: string; title: string; description: string; status: "pending" | "approved" | "rejected"; createdAt: string; href: string; }
@@ -41,9 +41,36 @@ export function RegistrationInboxProvider({children}: {children: ReactNode}) {
   return <Context.Provider value={{items, pending, readIds, markRead, error}}>{children}</Context.Provider>;
 }
 export function RegistrationInboxLink() {
-  const {items, readIds} = useContext(Context);
+  const {items, pending, readIds, markRead, error} = useContext(Context);
   const unread = items.filter((item) => !readIds.includes(item.id)).length;
-  return <Link href="/admin/notifications" className="icon-button" aria-label={unread ? unread + " thông báo đăng ký chưa đọc" : "Thông báo đăng ký"}><Bell size={21}/>{unread > 0 && <span>{unread > 99 ? "99+" : unread}</span>}</Link>;
+  const [open, setOpen] = useState(false);
+  const container = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => { if (!container.current?.contains(event.target as Node)) setOpen(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { setOpen(false); trigger.current?.focus(); } };
+    document.addEventListener("pointerdown", outside); document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
+  }, [open]);
+  const labels = {pending: "Chờ duyệt", approved: "Đã duyệt", rejected: "Đã từ chối"};
+  return <div className="registration-bell" ref={container}>
+    <button ref={trigger} type="button" className={"registration-bell-trigger" + (open ? " is-open" : "")} aria-label={unread ? unread + " thông báo chưa đọc" : "Thông báo"} aria-expanded={open} aria-controls="registration-bell-panel" aria-haspopup="dialog" onClick={() => setOpen(!open)}>
+      <Bell size={21}/>{unread > 0 && <span className="registration-bell-badge">{unread > 99 ? "99+" : unread}</span>}
+    </button>
+    {open && <section id="registration-bell-panel" role="dialog" aria-label="Thông báo đăng ký hội viên" className="registration-bell-panel">
+      <header><div><span className="registration-bell-eyebrow">TRUNG TÂM THÔNG BÁO</span><h2>Thông báo <span>{unread}</span></h2><p>{pending} hồ sơ đang chờ xét duyệt</p></div><button type="button" className="icon-button" aria-label="Đóng thông báo" onClick={() => setOpen(false)}><X size={18}/></button></header>
+      <div className="registration-bell-toolbar"><span><i/> Cập nhật tự động</span><button type="button" disabled={!unread} onClick={() => items.forEach((item) => markRead(item.id))}><CheckCheck size={15}/>Đọc tất cả</button></div>
+      {error && <p role="status" className="registration-bell-error">{error}</p>}
+      <div className="registration-bell-list">
+        {!items.length && <div className="registration-bell-empty"><Bell size={28}/><strong>Chưa có thông báo mới</strong><p>Hồ sơ đăng ký hội viên sẽ xuất hiện tại đây.</p></div>}
+        {items.map((item) => <Link key={item.id} className={"registration-bell-item" + (!readIds.includes(item.id) ? " is-unread" : "")} href={item.href + "?registrationId=" + encodeURIComponent(item.registrationId)} onClick={() => { markRead(item.id); setOpen(false); }}>
+          <span className="registration-bell-icon"><ClipboardList size={20}/></span><div><strong>{item.title}</strong><p>{item.description}</p><small><span className={"registration-bell-status " + item.status}>{labels[item.status]}</span><time>{new Date(item.createdAt).toLocaleString("vi-VN",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</time></small></div>{!readIds.includes(item.id) && <i className="registration-bell-dot"/>}
+        </Link>)}
+      </div>
+      <Link className="registration-bell-footer" href="/admin/registrations" onClick={() => setOpen(false)}>Xem hồ sơ đăng ký<ChevronRight size={16}/></Link>
+    </section>}
+  </div>;
 }
 export default function RegistrationInbox() {
   const {items, pending, readIds, markRead, error} = useContext(Context);
