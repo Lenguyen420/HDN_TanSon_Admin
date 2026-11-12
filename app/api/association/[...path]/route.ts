@@ -30,16 +30,26 @@ async function handle(request: NextRequest, context: Context) {
     );
 
   try {
-    if (path[0] === "event-files") {
+    if (
+      path[0] === "event-files" ||
+      (path[0] === "introduction-videos" && path[2] === "chunks")
+    ) {
+      const maxBytes = (path[0] === "event-files" ? 4 : 2) * 1024 * 1024;
       const length = Number(request.headers.get("content-length"));
-      if (length > 4 * 1024 * 1024)
-        return json({ message: "Mỗi file không được vượt quá 4 MB." }, 413);
+      if (length > maxBytes)
+        return json(
+          { message: "Phần tải lên vượt quá dung lượng cho phép." },
+          413,
+        );
       const bytes = await request.arrayBuffer();
-      if (bytes.byteLength > 4 * 1024 * 1024)
-        return json({ message: "Mỗi file không được vượt quá 4 MB." }, 413);
+      if (bytes.byteLength > maxBytes)
+        return json(
+          { message: "Phần tải lên vượt quá dung lượng cho phép." },
+          413,
+        );
       return await passResponse(
         await backendRequest(route.path, {
-          method: "POST",
+          method: request.method,
           headers: {
             Authorization: "Bearer " + token,
             "Content-Type": "application/octet-stream",

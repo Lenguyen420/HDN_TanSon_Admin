@@ -18,6 +18,23 @@ test(
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const bytes = Buffer.concat(chunks);
+      if (req.url === `/api/v1/admin/introduction-videos/${fileId}/chunks/0`) {
+        assert.equal(req.method, "PUT");
+        assert.equal(req.headers.authorization, "Bearer test-access");
+        assert.deepEqual(bytes, fileBytes);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ success: true }));
+      }
+      if (req.url === `/api/v1/public/introduction-videos/${fileId}`) {
+        assert.equal(req.headers.range, "bytes=2-5");
+        res.writeHead(206, {
+          "Content-Type": "video/mp4",
+          "Content-Range": `bytes 2-5/${fileBytes.length}`,
+          "Content-Length": "4",
+          "Accept-Ranges": "bytes",
+        });
+        return res.end(fileBytes.subarray(2, 6));
+      }
       if (req.url === "/api/v1/admin/event-files") {
         assert.deepEqual(bytes, fileBytes);
         assert.equal(
@@ -186,6 +203,31 @@ test(
       assert.equal(limited.status, 429);
       assert.equal(limited.headers.get("retry-after"), "30");
       assert.equal((await limited.json()).message, "Try later");
+      const videoPart = await fetch(
+        base + `/api/association/introduction-videos/${fileId}/chunks/0`,
+        {
+          method: "PUT",
+          headers: {
+            Cookie: "admin_access_token=test-access",
+            "Content-Type": "application/octet-stream",
+          },
+          body: fileBytes,
+        },
+      );
+      assert.equal(videoPart.status, 200);
+      const videoRange = await fetch(
+        base + `/uploads/introduction-videos/${fileId}`,
+        { headers: { Range: "bytes=2-5" } },
+      );
+      assert.equal(videoRange.status, 206);
+      assert.equal(
+        videoRange.headers.get("content-range"),
+        `bytes 2-5/${fileBytes.length}`,
+      );
+      assert.deepEqual(
+        Buffer.from(await videoRange.arrayBuffer()),
+        fileBytes.subarray(2, 6),
+      );
       const uploaded = await fetch(base + "/api/association/event-files", {
         method: "POST",
         headers: {

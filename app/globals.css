@@ -2237,3 +2237,23 @@ input::placeholder, textarea::placeholder { color: #6b7c94; opacity: 1; }
 @media(max-width:640px){.registration-bell-panel{position:fixed;top:74px;right:12px}.registration-bell-trigger{width:38px;height:38px;border-radius:12px}}
 
 .record-member-photo{position:relative;overflow:hidden;flex-shrink:0}.record-member-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.record-member-photo>span{display:grid;place-items:center;width:100%;height:100%}
+
+.video-source-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+}
+.video-source-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.form-field .video-source-options input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}

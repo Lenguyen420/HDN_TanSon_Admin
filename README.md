@@ -154,3 +154,5 @@ Chuông thông báo và trang Thông báo tải thêm `/association/event-inbox`
 ## Video giới thiệu Hội
 
 Vào Thông tin Hội → Giới thiệu Hội → Video giới thiệu để dán URL YouTube hoặc video MP4/WebM HTTPS. Rời ô nhập để xem trước, bấm Lưu thay đổi để lưu vào MongoDB qua backend. Xóa URL và lưu để ẩn video trên Mini App. Cần deploy backend có introductionVideoUrl trước dashboard và Mini App.
+
+Video giới thiệu hỗ trợ hai lựa chọn ở Thông tin Hội: chọn file MP4/WebM từ máy tính (tối đa 100 MB) hoặc link YouTube. Bấm Lưu thông tin Hội để tải file và lưu cấu hình vào DB; có xem trước, tiến độ tải và nút Xóa video. Upload chia phần 2 MB để dùng với Vercel; proxy phát video giữ HTTP Range. Cần deploy backend mới trước dashboard và Mini App.
