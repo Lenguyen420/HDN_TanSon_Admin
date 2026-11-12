@@ -14,7 +14,12 @@ import {
 } from "@/services/association-data";
 import type { Collection } from "@/services/association-store";
 export function useAssociationData(
-  options: { collections?: Collection[]; settings?: boolean } = {},
+  options: {
+    collections?: Collection[];
+    settings?: boolean;
+    reloadOnFocus?: boolean;
+    paused?: boolean;
+  } = {},
 ) {
   const scope = [
     ...new Set([
@@ -28,7 +33,10 @@ export function useAssociationData(
     .join(",");
   const [data, setData] = useState<AssociationData | null>(null);
   const [error, setError] = useState("");
+  const reloadOnFocus = options.reloadOnFocus !== false;
+  const paused = options.paused === true;
   useEffect(() => {
+    if (paused) return;
     const keys = scope ? (scope.split(",") as DataKey[]) : [];
     let cancelled = false;
     let revision = 0;
@@ -53,7 +61,7 @@ export function useAssociationData(
     const onFocus = () => {
       void load();
     };
-    window.addEventListener("focus", onFocus);
+    if (reloadOnFocus) window.addEventListener("focus", onFocus);
     const unsubscribe = subscribeAssociationData(() => void load());
     const unsubscribeMembers = subscribeRemoteData((key) => {
       if (keys.includes(key)) void load();
@@ -65,6 +73,6 @@ export function useAssociationData(
       unsubscribe();
       unsubscribeMembers();
     };
-  }, [scope]);
+  }, [scope, reloadOnFocus, paused]);
   return { data, error };
 }

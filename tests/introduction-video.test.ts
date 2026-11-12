@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { AxiosHeaders } from "axios";
+import { ApiError } from "../services/api/apiError.ts";
 import axiosInstance from "../services/api/axiosConfig.ts";
 import {
   readIntroductionVideo,
@@ -45,7 +46,7 @@ test("video upload splits binary into 2 MB chunks and completes before settings 
     await readIntroductionVideo(form, (message) => progress.push(message)),
     url,
   );
-  assert.equal(progress.at(-1), "Đang tải video… 100%");
+  assert.equal(progress.at(-1), "Đã tải xong video.");
   assert.deepEqual(calls, [
     "post /association/introduction-videos",
     ...[0, 1, 2].map(
@@ -108,7 +109,7 @@ test("video upload errors cancel session, do not return an incomplete URL", asyn
   const calls: string[] = [];
   axiosInstance.defaults.adapter = async (config) => {
     calls.push(config.method!);
-    if (config.method === "put") throw new Error("Upload failed");
+    if (config.method === "put") throw new ApiError(400, "Upload failed");
     return {
       config,
       data: {
@@ -155,4 +156,27 @@ test("proxy only allows supported introduction video operations", () => {
     ]).status,
     404,
   );
+});
+
+
+test("20.8 MB upload resumes after a timeout without uploading acknowledged chunks again", async () => {
+  const id = "00000000-0000-4000-8000-000000000000";
+  const file = new File([new Uint8Array(Math.ceil(20.8 * 1024 * 1024))], "intro.mp4");
+  const parts: number[] = []; let starts = 0, fail = true, completed = 0;
+  axiosInstance.defaults.adapter = async config => {
+    let data: unknown = { success: true };
+    if (config.url?.endsWith("/introduction-videos")) { starts++; data = { id, chunkSize: 2097152, count: 11 }; }
+    else if (config.url?.includes("/chunks/")) {
+      const index = Number(config.url.split("/").at(-1)); parts.push(index);
+      if (index === 2 && fail) { fail = false; throw new ApiError(504, "Timeout"); }
+    } else if (config.url?.endsWith("/complete")) { completed++; data = { url: "/api/v1/public/introduction-videos/" + id }; }
+    else if (config.method === "delete") assert.fail("Transient errors must keep the upload session");
+    return { config, data: { data }, status: 200, statusText: "OK", headers: new AxiosHeaders() };
+  };
+  const form = new FormData(); form.set("introductionVideoFile", file);
+  await assert.rejects(readIntroductionVideo(form, () => {}), new RegExp("phần 3/11"));
+  const result = await readIntroductionVideo(form, () => {});
+  assert.equal(result, "/api/v1/public/introduction-videos/" + id);
+  assert.equal(starts, 1); assert.equal(completed, 1);
+  assert.deepEqual(parts, [0, 1, 2, ...Array.from({ length: 9 }, (_, i) => i + 2)]);
 });

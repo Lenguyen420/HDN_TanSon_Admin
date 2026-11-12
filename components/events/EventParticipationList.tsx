@@ -1,4 +1,5 @@
 "use client";
+import { createBackgroundPoller } from "@/services/background-polling";
 
 import { useEffect, useState } from "react";
 import {
@@ -94,12 +95,19 @@ export default function EventParticipationList({
         if (active) setLoading(false);
       }
     };
-    void refresh(true);
-    const timer = window.setInterval(() => void refresh(), 5000);
+    let initial = true;
+    const poller = createBackgroundPoller(
+      async () => {
+        await refresh(initial);
+        initial = false;
+      },
+      () => document.visibilityState !== "hidden",
+    );
+    void poller.refresh();
     return () => {
       active = false;
       controller.abort();
-      window.clearInterval(timer);
+      poller.stop();
     };
   }, [eventId, page]);
 

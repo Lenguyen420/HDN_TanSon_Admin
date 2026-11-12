@@ -4,7 +4,8 @@ import Image from "next/image";
 import IntroductionVideoField from "./IntroductionVideoField";
 import { readIntroductionVideo } from "@/services/api/introductionVideoApi";
 import { notify } from "@/lib/notify";
-import { useState, type FormEvent } from "react";
+import { beginForegroundWork } from "@/services/background-polling";
+import { useRef, useState, type FormEvent } from "react";
 import { Download, Save } from "lucide-react";
 import type { AssociationRecord } from "@/services/association-store";
 import { saveAssociationSettings } from "@/services/association-api";
@@ -54,14 +55,22 @@ const groups = [
 ];
 
 export default function SettingsForm() {
-  const { data, error } = useAssociationData({ settings: true });
+  const saveLock = useRef(false);
   const [failure, setFailure] = useState("");
   const [videoProgress, setVideoProgress] = useState("");
   const [saving, setSaving] = useState(false);
+  const { data, error } = useAssociationData({
+    settings: true,
+    reloadOnFocus: false,
+    paused: saving,
+  });
   const [backingUp, setBackingUp] = useState(false);
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving) return;
+    if (saveLock.current) return;
+    saveLock.current = true;
+    const endForegroundWork = beginForegroundWork();
+    setFailure("");
     setSaving(true);
     const form = new FormData(event.currentTarget);
     try {
@@ -89,6 +98,7 @@ export default function SettingsForm() {
         form,
         setVideoProgress,
       );
+      setVideoProgress("Đang lưu thông tin Hội vào hệ thống…");
       await saveAssociationSettings(settings);
       notify.success("Đã lưu thông tin Hội.");
       setFailure("");
@@ -98,6 +108,8 @@ export default function SettingsForm() {
       setFailure(message);
       notify.error(message);
     } finally {
+      endForegroundWork();
+      saveLock.current = false;
       setSaving(false);
       setVideoProgress("");
     }
@@ -222,7 +234,7 @@ export default function SettingsForm() {
                 disabled={saving}
               >
                 <Save size={17} />
-                {saving ? "Đang lưu…" : "Lưu thông tin Hội"}
+                {saving ? videoProgress || "Đang lưu…" : "Lưu thông tin Hội"}
               </button>
             </div>
           </div>
