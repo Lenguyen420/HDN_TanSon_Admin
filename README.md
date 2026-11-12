@@ -163,7 +163,7 @@ Các tác vụ nền (chuông thông báo, danh sách thông báo, điểm danh)
 
 ## Tốc độ tải ảnh và video
 
-Video từ máy tính được tải tối đa 3 phần 2 MiB đồng thời. Chờ mọi request đang chạy kết thúc trước khi báo lỗi hoặc hoàn tất; phần đã được backend xác nhận được giữ để lần Lưu tiếp theo chỉ gửi phần còn thiếu. Không đưa access token ra trình duyệt; upload tiếp tục qua proxy dùng cookie HttpOnly.
+Video mới từ máy tính yêu cầu backend chia phần 256 KiB, tải tối đa 3 phần đồng thời (tổng dữ liệu đang gửi tối đa 768 KiB thay vì 6 MiB). Backend vẫn hỗ trợ phiên cũ 2 MiB. Deploy backend có hỗ trợ chunkSize trước rồi deploy admin. Chờ mọi request đang chạy kết thúc trước khi báo lỗi hoặc hoàn tất; phần đã được backend xác nhận được giữ để lần Lưu tiếp theo chỉ gửi phần còn thiếu. Không đưa access token ra trình duyệt; upload tiếp tục qua proxy dùng cookie HttpOnly.
 
 Proxy /uploads cache ảnh UUID ở Next.js Data Cache trong 24 giờ, dùng lại cho các lần truy cập sau. Video Range và tài liệu vẫn stream với no-store ở upstream, không trộn cache giữa các khoảng byte. Thay ảnh tạo URL UUID mới nên không cần xóa cache ảnh cũ.
 

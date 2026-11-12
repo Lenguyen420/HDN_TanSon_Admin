@@ -64,11 +64,12 @@ export function uploadIntroductionVideo(
           }>("/association/introduction-videos", {
             name: file.name,
             size: file.size,
+            chunkSize: 256 * 1024,
           })
         ).data.data;
         if (
           !/^[a-f0-9-]{36}$/.test(started.id) ||
-          started.chunkSize !== 2 * 1024 * 1024 ||
+          ![256 * 1024, 2 * 1024 * 1024].includes(started.chunkSize) ||
           started.count !== Math.ceil(file.size / started.chunkSize)
         )
           throw new Error("Máy chủ trả về phiên tải không hợp lệ.");

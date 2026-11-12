@@ -305,3 +305,47 @@ test("mixed chunk errors drain requests before cancellation and report the perma
   await rejected;
   assert.equal(cancelled, 1);
 });
+
+test("new uploads request 256 KiB parts and send all bytes using the negotiated size", async () => {
+  const id = "00000000-0000-4000-8000-000000000004";
+  const url = "/api/v1/public/introduction-videos/" + id;
+  const chunkSize = 256 * 1024;
+  const bytes = new Uint8Array(2 * 1024 * 1024 + 13);
+  for (let index = 0; index < bytes.length; index++) bytes[index] = index % 251;
+  const sent = new Map<number, Uint8Array>();
+  const progress: string[] = [];
+  axiosInstance.defaults.adapter = async (config) => {
+    let data: unknown = {};
+    if (config.url?.endsWith("/introduction-videos")) {
+      assert.equal(JSON.parse(config.data).chunkSize, chunkSize);
+      data = { id, chunkSize, count: Math.ceil(bytes.length / chunkSize) };
+    } else if (config.method === "put") {
+      const index = Number(config.url!.split("/").at(-1));
+      assert.ok(config.data instanceof Blob);
+      assert.ok(config.data.size <= chunkSize);
+      sent.set(index, new Uint8Array(await config.data.arrayBuffer()));
+    } else if (config.url?.endsWith("/complete")) {
+      assert.equal(sent.size, 9);
+      data = { url };
+    }
+    return {
+      config,
+      data: { data },
+      status: 200,
+      statusText: "OK",
+      headers: new AxiosHeaders(),
+    };
+  };
+  const form = new FormData();
+  form.set("introductionVideoFile", new File([bytes], "small-parts.mp4"));
+  assert.equal(
+    await readIntroductionVideo(form, (message) => progress.push(message)),
+    url,
+  );
+  for (const [index, part] of sent)
+    assert.deepEqual(
+      part,
+      bytes.slice(index * chunkSize, (index + 1) * chunkSize),
+    );
+  assert.equal(progress.at(-1), "Đã tải xong video.");
+});
