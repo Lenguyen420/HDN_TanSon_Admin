@@ -42,3 +42,6 @@ yarn-error.log*
 next-env.d.ts
 /.reference/
 /.playwright-mcp/
+
+# Public backend URL only; keep secrets in deployment environment.
+!.env.production

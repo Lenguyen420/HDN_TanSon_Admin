@@ -449,7 +449,7 @@ export const statusLabels: Record<string, string> = {
   inactive: "Ngừng hoạt động",
   published: "Đã công bố",
   draft: "Bản nháp",
-  pending: "Chờ xử lý",
+  pending: "Chờ duyệt",
   approved: "Đã duyệt",
   rejected: "Từ chối",
   paid: "Đã thanh toán",

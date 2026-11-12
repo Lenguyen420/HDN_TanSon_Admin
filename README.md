@@ -16,7 +16,7 @@ Frontend Next.js 16 chạy tại http://localhost:3003, kết nối backend Expr
 File `.env.local` của frontend:
 
 ~~~env
-ASSOCIATION_API_URL=http://127.0.0.1:4000/api/v1
+ASSOCIATION_API_URL=https://behdntanson.vercel.app/api/v1
 ~~~
 
 Nhóm nội dung dùng các route cùng tiền tố /api/association: news, events, member-visits, notifications, banners; mỗi nhóm hỗ trợ GET danh sách/chi tiết, POST, PUT và DELETE. Service nằm trong api/contentApi.ts. Bộ lọc hỗ trợ page/limit/search/status, thêm topic cho bài viết hoặc category cho thông báo. Ảnh dùng URL hoặc ảnh JPG/PNG/WebP base64 đã thu nhỏ. Dữ liệu nội dung cũ trong localStorage không tự chuyển lên máy chủ; giao diện lấy nội dung từ MongoDB và báo lỗi nếu API không kết nối được.
@@ -121,3 +121,7 @@ Phần Cấu hình → Thông tin Hội dùng GET và PUT /api/association/setti
 Backend lưu duy nhất một bản cấu hình có id association trong collection association_settings. Tên Hội và khẩu hiệu bắt buộc; các trường tùy chọn bỏ qua hoặc gửi chuỗi rỗng khi PUT sẽ được xóa về rỗng. Form gửi đầy đủ các trường, khóa thao tác trong lúc lưu, hiển thị lỗi API và cập nhật dữ liệu khi thành công. Email, số điện thoại, URL HTTPS và câu hỏi dạng câu hỏi | câu trả lời được kiểm tra trên backend. Logo nhận diện vẫn dùng ảnh cố định hiện tại.
 
 GET /api/v1/public/settings dành cho Mini App, không yêu cầu token và không trả thông tin người sửa. Cấu hình localStorage cũ không tự đưa lên MongoDB hoặc dùng thay thế khi backend lỗi. Mặc định giữ tên Hội và khẩu hiệu hiện có, các thông tin liên hệ/trợ lý để trống tới khi lưu lần đầu. Mini App chưa được sửa trong công việc này.
+
+## Backend Vercel
+
+Admin dùng https://behdntanson.vercel.app/api/v1. File .env.local dùng trên máy; .env.production chỉ chứa URL công khai và được lưu cùng source. Nếu hosting đã có biến ASSOCIATION_API_URL, đặt lại đúng URL này vì biến trên hosting được ưu tiên. Khởi động lại dev server hoặc redeploy sau khi thay đổi cấu hình. Không đặt MongoDB URI hoặc JWT secret vào frontend.
