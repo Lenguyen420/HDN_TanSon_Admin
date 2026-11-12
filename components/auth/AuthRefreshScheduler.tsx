@@ -1,14 +1,7 @@
 "use client";
 import { useEffect } from "react";
-import { ApiError, authApi } from "@/api";
-import { clearAdminAuth, rememberAdminAuth } from "@/api/authSession";
-export function rememberAccessTokenExpiry(expiresIn?: number | null) {
-  if (typeof window !== "undefined" && typeof expiresIn === "number")
-    window.localStorage.setItem(
-      "admin_access_expires_at",
-      String(Date.now() + expiresIn * 1000),
-    );
-}
+import { ApiError, authApi } from "@/services/api";
+import { clearAdminAuth, rememberAdminAuth } from "@/services/api/authSession";
 export default function AuthRefreshScheduler() {
   useEffect(() => {
     if (window.location.pathname === "/login") return;

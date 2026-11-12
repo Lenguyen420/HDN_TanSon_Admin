@@ -1,10 +1,10 @@
-import { memberApi, registrationApi, settingsApi } from "@/api";
-import { settingsFields, type SettingsPayload } from "../api/settingsApi";
+import { memberApi, registrationApi, settingsApi } from "@/services/api";
+import { settingsFields, type SettingsPayload } from "./api/settingsApi";
 import {
   contentApis,
   contentCollections,
   type ContentCollection,
-} from "../api/contentApi";
+} from "./api/contentApi";
 import {
   readAssociationData,
   saveAssociationRecord,

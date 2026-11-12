@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import LogoutButton from "@/components/auth/LogoutButton";
-import { getStoredAdminUser } from "@/api/authSession";
+import { getStoredAdminUser } from "@/services/api/authSession";
 import { navigation } from "@/components/shared/association/config";
 
 export default function AppShell({

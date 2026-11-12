@@ -14,8 +14,7 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { rememberAccessTokenExpiry } from "@/components/auth/AuthRefreshScheduler";
-import { authApi, isApiError } from "@/api";
+import { authApi, isApiError } from "@/services/api";
 
 const DASHBOARD_PATH = "/";
 
@@ -58,11 +57,10 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const data = await authApi.login({
+      await authApi.login({
         username: username.trim(),
         password,
       });
-      rememberAccessTokenExpiry(data.expiresIn);
 
       flashSuccess("Đăng nhập thành công.");
       window.location.assign(DASHBOARD_PATH);

@@ -4,7 +4,7 @@ import { notify, flashSuccess } from "@/lib/notify";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 
-import { authApi } from "@/api";
+import { authApi } from "@/services/api";
 
 export default function LogoutButton() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);

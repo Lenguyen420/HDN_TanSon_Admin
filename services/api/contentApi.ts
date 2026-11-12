@@ -23,8 +23,6 @@ function createContentApi(collection: ContentCollection) {
   return {
     getAll: async (params: ContentListParams = {}) =>
       (await axiosInstance.get<ListResponse>(endpoint, { params })).data,
-    getById: async (id: string) =>
-      (await axiosInstance.get<{ data: ApiRecord }>(recordUrl(id))).data.data,
     create: async (data: RecordPayload) =>
       (await axiosInstance.post<{ data: ApiRecord }>(endpoint, data)).data.data,
     update: async (id: string, data: RecordPayload) =>
@@ -35,15 +33,10 @@ function createContentApi(collection: ContentCollection) {
     },
   };
 }
-export const newsApi = createContentApi("news");
-export const eventsApi = createContentApi("events");
-export const memberVisitsApi = createContentApi("member-visits");
-export const notificationsApi = createContentApi("notifications");
-export const bannersApi = createContentApi("banners");
 export const contentApis = {
-  news: newsApi,
-  events: eventsApi,
-  "member-visits": memberVisitsApi,
-  notifications: notificationsApi,
-  banners: bannersApi,
+  news: createContentApi("news"),
+  events: createContentApi("events"),
+  "member-visits": createContentApi("member-visits"),
+  notifications: createContentApi("notifications"),
+  banners: createContentApi("banners"),
 };

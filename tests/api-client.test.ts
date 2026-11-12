@@ -5,11 +5,11 @@ import {
   AxiosHeaders,
   type InternalAxiosRequestConfig,
 } from "axios";
-import axiosInstance from "../api/axiosConfig.ts";
-import { authApi } from "../api/authApi.ts";
-import { memberApi } from "../api/memberApi.ts";
-import { registrationApi } from "../api/registrationApi.ts";
-import { ApiError } from "../api/apiError.ts";
+import axiosInstance from "../services/api/axiosConfig.ts";
+import { authApi } from "../services/api/authApi.ts";
+import { memberApi } from "../services/api/memberApi.ts";
+import { registrationApi } from "../services/api/registrationApi.ts";
+import { ApiError } from "../services/api/apiError.ts";
 
 function response(
   config: InternalAxiosRequestConfig,

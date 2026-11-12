@@ -13,6 +13,8 @@ Frontend Next.js 16 chạy tại http://localhost:3003, kết nối backend Expr
 
 ## Kết nối backend
 
+Các API dữ liệu dùng chung route `app/api/association/[...path]/route.ts`, giới hạn theo danh sách chức năng và phương thức hợp lệ. URL hiện có không đổi. Tổng số route động giảm từ 13 xuống 6: bốn route xác thực, một route dữ liệu, một route ảnh. Các trang quản trị tiếp tục được build tĩnh. Service Axios đặt tại `services/api/`, tách khỏi thư mục API server. Đã bỏ các route chuyển tiếp riêng bị lặp và script PM2 của dự án cũ.
+
 File `.env.local` của frontend:
 
 ~~~env
@@ -32,9 +34,9 @@ Backend nằm tại `D:\HDN_TanSon_Backend\hdn_tanson_be`. Chạy `npm run start
 - `components/shared/association/`: bảng, hộp thoại, chọn ảnh, hook dữ liệu và cấu hình trường/menu.
 - `components/shared/notifications/`: toast dùng chung.
 - `components/layout/`: khung giao diện; `components/auth/`: quản lý phiên.
-- `api/axiosConfig.ts`: Axios dùng chung, timeout, xử lý lỗi và tự làm mới phiên khi gặp 401.
-- `api/authApi.ts`, `api/memberApi.ts`, `api/registrationApi.ts`: service theo từng nhóm API; `api/index.ts` gom export.
-- `api/authSession.ts`: lưu thông tin quản trị viên và thời điểm hết hạn; token nằm trong cookie HttpOnly.
+- `services/api/axiosConfig.ts`: Axios dùng chung, timeout, xử lý lỗi và tự làm mới phiên khi gặp 401.
+- `services/api/authApi.ts`, `services/api/memberApi.ts`, `services/api/registrationApi.ts`: service theo từng nhóm API; `services/api/index.ts` gom export.
+- `services/api/authSession.ts`: lưu thông tin quản trị viên và thời điểm hết hạn; token nằm trong cookie HttpOnly.
 - `services/association-api.ts`: nối API với hook dữ liệu, kiểm tra liên kết dữ liệu và phát sự kiện cập nhật giao diện.
 - `services/association-store.ts`: dữ liệu cục bộ trống ban đầu và thao tác nội dung chưa có API.
 - `services/legacy-sample-cleanup.ts`: dấu vân tay dùng dọn dữ liệu minh họa cũ một lần; không chứa nội dung mẫu để hiển thị.
@@ -45,7 +47,7 @@ Backend nằm tại `D:\HDN_TanSon_Backend\hdn_tanson_be`. Chạy `npm run start
 Cấu trúc service theo mẫu `FE_Admin_CTS/src/api`, dùng TypeScript phù hợp dự án hiện tại:
 
 ```ts
-import { authApi, memberApi, registrationApi } from "@/api";
+import { authApi, memberApi, registrationApi } from "@/services/api";
 
 await authApi.login({ username, password });
 const { data: members, pagination } = await memberApi.getAll({ page: 1, limit: 100 });
@@ -54,7 +56,7 @@ await registrationApi.approve(registrationId);
 await registrationApi.reject(registrationId, reason);
 ```
 
-Các nhóm dữ liệu hỗ trợ `getAll`, `getById`, `create`, `update`, `delete`. `getAll` trả `{ data, pagination }`; các thao tác lấy/tạo/sửa trả nội dung `response.data.data`. `approve` trả `{ registration, memberId }`. Luồng gọi: component/hook → service trong `api/` → Axios (`/api`) → API chuyển tiếp Next.js → Express (`ASSOCIATION_API_URL`). Đăng nhập, đăng xuất và lịch tự refresh cũng dùng cùng lớp Axios.
+Các nhóm dữ liệu hỗ trợ `getAll`, `create`, `update`, `delete`. `getAll` trả `{ data, pagination }`; thao tác tạo/sửa trả nội dung `response.data.data`. Chi tiết dùng bản ghi đã tải trong danh sách; các hàm `getById` chưa sử dụng đã được bỏ. `approve` trả `{ registration, memberId }`. Luồng gọi: component/hook → service trong `services/api/` → Axios (`/api`) → API chuyển tiếp Next.js → Express (`ASSOCIATION_API_URL`). Đăng nhập, đăng xuất và lịch tự refresh cũng dùng cùng lớp Axios.
 
 Khi nhiều yêu cầu cùng gặp 401, Axios dùng chung một lần refresh rồi thử lại mỗi yêu cầu tối đa một lần. Lỗi trả về `ApiError` với `statusCode`, `message`, `retryAfter` để giao diện hiển thị toast hoặc đếm thời gian chờ. Không tự xóa chuỗi rỗng trong payload vì biểu mẫu cần gửi chuỗi rỗng để xóa giá trị cũ; mật khẩu được gửi nguyên trạng. Những phần chưa có API tiếp tục lưu cục bộ như mô tả trên.
 
@@ -98,6 +100,7 @@ Frontend dùng Sonner với `ToastProvider` tại `components/shared/notificatio
 npm run type-check
 npm run lint
 npm test
+npm run test:proxy
 ```
 
 Trên Windows PowerShell chặn `npm.ps1`, dùng `npm.cmd` thay cho `npm`.

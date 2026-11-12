@@ -1,4 +1,4 @@
-import type { AssociationRecord } from "../services/association-store.ts";
+import type { AssociationRecord } from "../association-store.ts";
 
 export type ApiRecord = AssociationRecord;
 export type RecordPayload = Omit<AssociationRecord, "id"> & { id?: string };
