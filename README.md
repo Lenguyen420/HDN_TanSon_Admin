@@ -139,3 +139,6 @@ Admin dùng https://behdntanson.vercel.app/api/v1. File .env.local dùng trên m
 Chuông trên header mở bảng thông báo xổ xuống với badge chưa đọc và 100 hồ sơ đăng ký gần nhất từ backend. Menu Thông báo đã được bỏ khỏi sidebar; thao tác xem hồ sơ và đánh dấu đọc nằm ngay tại chuông. Bấm thông báo để lọc đúng hồ sơ tại mục Đăng ký và thực hiện duyệt/từ chối; có nút Xem toàn bộ hồ sơ để bỏ lọc. Số hồ sơ chờ duyệt tính trên toàn bộ database. Inbox dùng proxy đăng nhập HttpOnly và tự cập nhật mỗi 5 giây khi trang hiển thị; tải lại ngay khi quay lại tab. Trạng thái đã đọc lưu theo tài khoản trên trình duyệt hiện tại. Danh sách thông báo nội dung của Hội vẫn giữ nguyên bên dưới.
 
 Deploy backend trước rồi redeploy admin. Đây là thông báo trong ứng dụng, không gửi email hoặc tin nhắn ngoài ứng dụng.
+
+
+Ảnh hội viên: trường URL ảnh đại diện trong form Hội viên/Ban chấp hành được gửi về backend bằng avatar. Dùng URL HTTP(S) của ảnh hoặc đường dẫn uploads/... hợp lệ; không nhập base64 vào trường URL. Ảnh được hiển thị trên Mini App khi backend và Mini App đã deploy bản hỗ trợ avatar.

@@ -76,6 +76,7 @@ const article: Field[] = [
   },
 ];
 const memberFields: Field[] = [
+  { key: "avatar", label: "URL ảnh đại diện" },
   { key: "name", label: "Họ và tên", required: true },
   { key: "company", label: "Doanh nghiệp", required: true },
   { key: "jobTitle", label: "Chức vụ tại doanh nghiệp" },

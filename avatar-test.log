@@ -1,0 +1,50 @@
+
+> admin-dashboard@0.1.0 test
+> node --experimental-strip-types --test tests/*.test.ts
+
+(node:2340) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/HDN_TanSon_Admin/admin-dashboard/tests/api-client.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\D:\HDN_TanSon_Admin\admin-dashboard\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ concurrent 401 requests share one refresh and retry with original payload (4.6464ms)
+✔ failed refresh rejects original request without a refresh loop (1.2127ms)
+✔ a second 401 after refresh stops after one retry (0.8404ms)
+✔ login keeps password unchanged and exposes rate-limit retry time (0.5223ms)
+✔ incorrect credentials do not trigger refresh (0.3667ms)
+✔ updates retain empty values and false so existing fields can be cleared (0.3662ms)
+✔ network and timeout failures have readable messages (0.6639ms)
+(node:16480) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/HDN_TanSon_Admin/admin-dashboard/tests/association-data.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\D:\HDN_TanSon_Admin\admin-dashboard\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ query cache shares requests, expires, and preserves mutations against an older GET (2.1079ms)
+✔ admin loads only requested collection and updates CRUD without reloading lists (3.5763ms)
+✔ member portrait URLs are preserved in admin create/update payloads and can be cleared (0.6496ms)
+(node:12240) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/HDN_TanSon_Admin/admin-dashboard/tests/association-route.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\D:\HDN_TanSon_Admin\admin-dashboard\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ shared route preserves collection CRUD URLs and registration decisions (1.8109ms)
+✔ settings exposes only its two supported methods (0.2287ms)
+✔ proxy rejects unknown APIs, traversal, extra segments and unsupported operations (0.1993ms)
+✔ registration inbox is an authenticated proxy target with GET only (0.179ms)
+(node:19232) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/HDN_TanSon_Admin/admin-dashboard/tests/association-store.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\D:\HDN_TanSon_Admin\admin-dashboard\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ khởi tạo danh sách trống, không sinh dữ liệu mẫu và các lần tạo độc lập (1.4136ms)
+✔ dọn bản ghi mẫu chưa chỉnh sửa, giữ bản ghi tự nhập và nội dung đã sửa (9.6698ms)
+✔ không tự thêm lại hồ sơ mẫu khi đọc dữ liệu trình duyệt cũ (0.2131ms)
+✔ bảo toàn lịch sử tài chính và tham gia khi xóa dữ liệu liên quan (0.5332ms)
+✔ cập nhật nội dung lồng nhau giữ nguyên lịch trình (0.3703ms)
+✔ bộ nhớ hỏng được báo lỗi và không bị ghi đè (0.1735ms)
+✔ báo lưu thất bại khi hết dung lượng (0.1706ms)
+✔ kiểm tra liên kết theo hội viên từ API mà không lưu bản sao hội viên cục bộ (0.2535ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 325.5323

@@ -21,6 +21,7 @@ import {
   type Collection,
 } from "./association-store.ts";
 const memberKeys = [
+  "avatar",
   "id",
   "name",
   "company",

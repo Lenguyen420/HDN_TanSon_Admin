@@ -83,3 +83,15 @@ test("admin loads only requested collection and updates CRUD without reloading l
     { method: "delete", url: "/association/banners/b1" },
   ]);
 });
+
+
+test("member portrait URLs are preserved in admin create/update payloads and can be cleared", async () => {
+  const sent: unknown[] = [];
+  axios.defaults.adapter = async (config) => {
+    const body = JSON.parse(config.data); sent.push(body.avatar);
+    return {data:{data:{...body,id:"portrait-member"}},status:200,statusText:"OK",headers:{},config};
+  };
+  await saveRecord("members", {id:"portrait-member",name:"Hội viên",company:"Công ty",avatar:"https://example.com/photo.jpg"});
+  await saveRecord("members", {id:"portrait-member",name:"Hội viên",company:"Công ty",avatar:""}, undefined, true);
+  assert.deepEqual(sent,["https://example.com/photo.jpg",""]);
+});
