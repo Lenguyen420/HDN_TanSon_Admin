@@ -98,7 +98,7 @@ function DetailDialog({
   return (
     <dialog
       ref={dialog}
-      className="record-dialog"
+      className={`record-dialog${section === "events" ? " event-detail-dialog" : ""}`}
       aria-labelledby="detail-title"
       onCancel={onClose}
     >
@@ -282,7 +282,9 @@ export default function CollectionPage({ section }: { section: string }) {
   useEffect(() => {
     if (!["registrations", "events"].includes(section)) return;
     const target =
-      new URLSearchParams(window.location.search).get(section === "events" ? "eventId" : "registrationId") || "";
+      new URLSearchParams(window.location.search).get(
+        section === "events" ? "eventId" : "registrationId",
+      ) || "";
     const timer = window.setTimeout(() => setNotificationTarget(target), 0);
     return () => window.clearTimeout(timer);
   }, [section]);
@@ -386,7 +388,9 @@ export default function CollectionPage({ section }: { section: string }) {
       </div>
       {notificationTarget && (
         <p role="status">
-          {section === "events" ? "Đang xem sự kiện được chọn từ thông báo." : "Đang xem hồ sơ được chọn từ thông báo."}{" "}
+          {section === "events"
+            ? "Đang xem sự kiện được chọn từ thông báo."
+            : "Đang xem hồ sơ được chọn từ thông báo."}{" "}
           <button
             type="button"
             className="button"
