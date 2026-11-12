@@ -37,7 +37,14 @@ async function handle(request: NextRequest, context: Context) {
           ? { Range: request.headers.get("range")! }
           : undefined,
       signal: AbortSignal.timeout(15000),
-      cache: "no-store",
+      // Image filenames are immutable UUIDs; binary ranges must stay separate.
+      cache:
+        !isVideo && !isFile && request.method === "GET"
+          ? "force-cache"
+          : "no-store",
+      ...(!isVideo && !isFile && request.method === "GET"
+        ? { next: { revalidate: 86400 } }
+        : {}),
     });
     if (isVideo && response.status === 416)
       return new Response(null, {

@@ -10,6 +10,9 @@ test(
   { timeout: 30000 },
   async () => {
     const received = [];
+    let imageReads = 0;
+    const imagePath =
+      "/uploads/banners/00000000-0000-4000-8000-000000000002.webp";
     const fileBytes = Buffer.from([
       37, 80, 68, 70, 45, 49, 46, 52, 10, 0, 255, 128,
     ]);
@@ -57,6 +60,14 @@ test(
         });
         return res.end(req.method === "HEAD" ? undefined : fileBytes);
       }
+      if (req.url === imagePath) {
+        imageReads++;
+        res.writeHead(200, {
+          "Content-Type": "image/webp",
+          "Content-Length": String(fileBytes.length),
+        });
+        return res.end(fileBytes);
+      }
       const text = bytes.toString();
       received.push({
         path: req.url,
@@ -65,7 +76,8 @@ test(
         body: text ? JSON.parse(text) : undefined,
       });
       if (req.url.includes("connection-failure")) return req.socket.destroy();
-      if (req.url === "/api/v1/admin/settings" && req.method === "PUT") await delay(16000);
+      if (req.url === "/api/v1/admin/settings" && req.method === "PUT")
+        await delay(16000);
       res.setHeader("Content-Type", "application/json");
       if (req.url.includes("rate-limited")) {
         res.writeHead(429, { "Retry-After": "30" });
@@ -217,6 +229,16 @@ test(
         },
       );
       assert.equal(videoPart.status, 200);
+      for (let i = 0; i < 2; i++) {
+        const image = await fetch(base + imagePath);
+        assert.equal(image.status, 200);
+        assert.deepEqual(Buffer.from(await image.arrayBuffer()), fileBytes);
+      }
+      assert.equal(
+        imageReads,
+        1,
+        "immutable images are reused from the admin server cache",
+      );
       const videoRange = await fetch(
         base + `/uploads/introduction-videos/${fileId}`,
         { headers: { Range: "bytes=2-5" } },
@@ -230,11 +252,23 @@ test(
         Buffer.from(await videoRange.arrayBuffer()),
         fileBytes.subarray(2, 6),
       );
-      const slowSave = await call("/api/association/settings", "PUT", { name: "Test Hội", slogan: "Test" });
-      assert.equal(slowSave.status, 200, "Save should allow a backend response taking more than 15 seconds");
+      const slowSave = await call("/api/association/settings", "PUT", {
+        name: "Test Hội",
+        slogan: "Test",
+      });
+      assert.equal(
+        slowSave.status,
+        200,
+        "Save should allow a backend response taking more than 15 seconds",
+      );
       assert.equal(received.at(-1).method, "PUT");
-      assert.deepEqual(received.at(-1).body, { name: "Test Hội", slogan: "Test" });
-      const connectionFailure = await call("/api/association/news/connection-failure");
+      assert.deepEqual(received.at(-1).body, {
+        name: "Test Hội",
+        slogan: "Test",
+      });
+      const connectionFailure = await call(
+        "/api/association/news/connection-failure",
+      );
       assert.equal(connectionFailure.status, 502);
       const failureMessage = (await connectionFailure.json()).message;
       assert.match(failureMessage, /ASSOCIATION_API_URL/);

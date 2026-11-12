@@ -39,7 +39,7 @@ type UploadSession = {
   id: string;
   chunkSize: number;
   count: number;
-  next: number;
+  completed: Set<number>;
   created: number;
   url?: string;
 };
@@ -72,28 +72,66 @@ export function uploadIntroductionVideo(
           started.count !== Math.ceil(file.size / started.chunkSize)
         )
           throw new Error("Máy chủ trả về phiên tải không hợp lệ.");
-        session = { ...started, next: 0, created: Date.now() };
+        session = { ...started, completed: new Set(), created: Date.now() };
         sessions.set(file, session);
       }
       if (session.url) return session.url;
-      for (let index = session.next; index < session.count; index++) {
-        stage = "Tải video phần " + (index + 1) + "/" + session.count;
+      const active = session;
+      let next = 0;
+      const failure: { index: number; error: unknown }[] = [];
+      const report = () =>
         progress(
-          stage + " (" + Math.round((index / session.count) * 100) + "%)…",
+          "Đã tải video " +
+            active.completed.size +
+            "/" +
+            active.count +
+            " phần (" +
+            Math.round((active.completed.size / active.count) * 100) +
+            "%)…",
         );
-        const part = file.slice(
-          index * session.chunkSize,
-          Math.min(file.size, (index + 1) * session.chunkSize),
+      report();
+      async function worker() {
+        while (!failure.length) {
+          const index = next++;
+          if (index >= active.count) return;
+          if (active.completed.has(index)) continue;
+          try {
+            await axiosInstance.put(
+              "/association/introduction-videos/" +
+                active.id +
+                "/chunks/" +
+                index,
+              file.slice(
+                index * active.chunkSize,
+                Math.min(file.size, (index + 1) * active.chunkSize),
+              ),
+              {
+                headers: { "Content-Type": "application/octet-stream" },
+                timeout: 60000,
+              },
+            );
+            active.completed.add(index);
+            report();
+          } catch (error) {
+            failure.push({ index, error });
+          }
+        }
+      }
+      // Drain in-flight requests before retrying or deleting the session.
+      // Acknowledged parts beyond a failed part are retained for the next save.
+      await Promise.all(
+        Array.from({ length: Math.min(3, active.count) }, () => worker()),
+      );
+      if (failure.length) {
+        // A permanent error must not be hidden by another worker's timeout.
+        const permanent = failure.find(
+          ({ error }) =>
+            !(error instanceof ApiError) ||
+            !([0, 429].includes(error.statusCode) || error.statusCode >= 500),
         );
-        await axiosInstance.put(
-          "/association/introduction-videos/" + session.id + "/chunks/" + index,
-          part,
-          {
-            headers: { "Content-Type": "application/octet-stream" },
-            timeout: 60000,
-          },
-        );
-        session.next = index + 1;
+        const failed = permanent ?? failure[0];
+        stage = "Tải video phần " + (failed.index + 1) + "/" + active.count;
+        throw failed.error;
       }
       stage = "Hoàn tất video";
       progress("Đang hoàn tất video trên hệ thống…");

@@ -160,3 +160,11 @@ Video giới thiệu hỗ trợ hai lựa chọn ở Thông tin Hội: chọn fi
 ## Giảm tải khi lưu Thông tin Hội
 
 Các tác vụ nền (chuông thông báo, danh sách thông báo, điểm danh) cập nhật tối đa mỗi 60 giây sau khi yêu cầu trước hoàn tất; không gọi chồng do focus và không bắt đầu lượt mới trong lúc lưu Thông tin Hội. Form Thông tin Hội không tải lại khi focus, và chặn bấm lưu trùng. Video tải tuần tự từng phần 2 MB, hiển thị đúng bước đang xử lý. Nếu timeout/mạng lỗi, giữ nguyên file trên cùng trang và bấm Lưu để tiếp tục phần chưa được xác nhận; refresh trang hoặc chọn file mới sẽ tạo phiên mới. Dọn phiên lỗi không giữ nút Lưu chờ thêm. Đây là thay đổi dashboard, cần deploy lại dashboard để áp dụng cho URL Vercel; chạy local thì tải lại trang local.
+
+## Tốc độ tải ảnh và video
+
+Video từ máy tính được tải tối đa 3 phần 2 MiB đồng thời. Chờ mọi request đang chạy kết thúc trước khi báo lỗi hoặc hoàn tất; phần đã được backend xác nhận được giữ để lần Lưu tiếp theo chỉ gửi phần còn thiếu. Không đưa access token ra trình duyệt; upload tiếp tục qua proxy dùng cookie HttpOnly.
+
+Proxy /uploads cache ảnh UUID ở Next.js Data Cache trong 24 giờ, dùng lại cho các lần truy cập sau. Video Range và tài liệu vẫn stream với no-store ở upstream, không trộn cache giữa các khoảng byte. Thay ảnh tạo URL UUID mới nên không cần xóa cache ảnh cũ.
+
+vercel.json đặt Functions tại sin1 để cùng vùng backend hiện tại. Cần redeploy cả admin và backend để áp dụng các tối ưu. Cache không loại bỏ độ trễ lần tải đầu; tốc độ thực tế còn phụ thuộc mạng và MongoDB.

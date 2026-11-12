@@ -102,7 +102,7 @@ test("company founding date is retained in registration and member saves", async
     const body = JSON.parse(config.data); sent.push(body.companyFoundedAt);
     return {data:{data:{...body,id:"founded-member"}},status:200,statusText:"OK",headers:{},config};
   };
-  await saveRecord("members", {name:"Hội viên",company:"Doanh nghiệp",joinedAt:"2026-11-12",companyFoundedAt:"2010-05-20"});
-  await saveRecord("registrations", {fullName:"Hội viên",company:"Doanh nghiệp",phone:"0900000001",date:"2026-11-12",companyFoundedAt:"2010-05-20"});
+  await saveRecord("members", {id:"founded-member",name:"Hội viên",company:"Doanh nghiệp",joinedAt:"2026-11-12",companyFoundedAt:"2010-05-20"});
+  await saveRecord("registrations", {id:"founded-registration",fullName:"Hội viên",company:"Doanh nghiệp",phone:"0900000001",date:"2026-11-12",companyFoundedAt:"2010-05-20"});
   assert.deepEqual(sent,["2010-05-20","2010-05-20"]);
 });
