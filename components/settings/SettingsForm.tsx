@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import IntroductionVideoPreview from "./IntroductionVideoPreview";
 import { notify } from "@/lib/notify";
 import { useState, type FormEvent } from "react";
 import { Download, Save } from "lucide-react";
@@ -21,6 +22,7 @@ const groups = [
       ["name", "Tên Hội"],
       ["slogan", "Khẩu hiệu"],
       ["introduction", "Giới thiệu", "textarea"],
+      ["introductionVideoUrl", "Video giới thiệu (YouTube hoặc URL video HTTPS)", "url"],
       ["mission", "Sứ mệnh", "textarea"],
     ],
   },
@@ -53,6 +55,7 @@ const groups = [
 export default function SettingsForm() {
   const { data, error } = useAssociationData({ settings: true });
   const [failure, setFailure] = useState("");
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [backingUp, setBackingUp] = useState(false);
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -69,6 +72,12 @@ export default function SettingsForm() {
         throw new Error("Vui lòng nhập tên Hội và khẩu hiệu.");
       if (settings.zaloUrl && !String(settings.zaloUrl).startsWith("https://"))
         throw new Error("Liên kết Zalo cần bắt đầu bằng https://.");
+      if (settings.introductionVideoUrl) {
+        try {
+          const url = new URL(String(settings.introductionVideoUrl));
+          if (url.protocol !== "https:" || url.username || url.password) throw new Error();
+        } catch { throw new Error("Video giới thiệu cần URL HTTPS hợp lệ."); }
+      }
       if (
         String(settings.assistantQuestions)
           .split("\n")
@@ -166,7 +175,7 @@ export default function SettingsForm() {
                 <div className="form-grid">
                   {group.fields.map(([key, label, type]) => (
                     <label
-                      className={`form-field ${type === "textarea" ? "full-width" : ""}`}
+                      className={`form-field ${type === "textarea" || key === "introductionVideoUrl" ? "full-width" : ""}`}
                       key={key}
                     >
                       <span>
@@ -184,11 +193,15 @@ export default function SettingsForm() {
                         <input
                           name={key}
                           type={type || "text"}
+                          maxLength={key === "introductionVideoUrl" ? 2048 : undefined}
+                          placeholder={key === "introductionVideoUrl" ? "https://youtu.be/... hoặc https://.../gioi-thieu.mp4" : undefined}
+                          onBlur={key === "introductionVideoUrl" ? (event) => setVideoPreview(event.currentTarget.value.trim()) : undefined}
                           disabled={saving}
                           defaultValue={String(data.settings[key] || "")}
                           required={["name", "slogan"].includes(key)}
                         />
                       )}
+                      {key === "introductionVideoUrl" && <><small>Video hiển thị dưới tên Hội tại trang Giới thiệu trên Mini App. Dán link YouTube hoặc link trực tiếp MP4/WebM; để trống để ẩn.</small><IntroductionVideoPreview key={videoPreview ?? String(data.settings.introductionVideoUrl || "")} url={videoPreview ?? String(data.settings.introductionVideoUrl || "")} /></>}
                     </label>
                   ))}
                 </div>

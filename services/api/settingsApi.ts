@@ -4,6 +4,7 @@ export const settingsFields = [
   "name",
   "slogan",
   "introduction",
+  "introductionVideoUrl",
   "mission",
   "department",
   "address",

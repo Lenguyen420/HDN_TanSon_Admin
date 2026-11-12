@@ -150,3 +150,7 @@ Deploy backend trước rồi redeploy admin. Đây là thông báo trong ứng 
 ## Thông báo vắng mặt sự kiện
 
 Chuông thông báo và trang Thông báo tải thêm `/association/event-inbox`. Người đã đăng ký trên Mini App nhưng chưa điểm danh sau giờ kết thúc xuất hiện tại đây. Chi tiết sự kiện có bảng đăng ký/điểm danh phân trang, tự cập nhật trạng thái. Mốc thời gian và trạng thái do backend tính, không dựa vào đồng hồ trình duyệt admin. Cần deploy backend mới trước dashboard.
+
+## Video giới thiệu Hội
+
+Vào Thông tin Hội → Giới thiệu Hội → Video giới thiệu để dán URL YouTube hoặc video MP4/WebM HTTPS. Rời ô nhập để xem trước, bấm Lưu thay đổi để lưu vào MongoDB qua backend. Xóa URL và lưu để ẩn video trên Mini App. Cần deploy backend có introductionVideoUrl trước dashboard và Mini App.

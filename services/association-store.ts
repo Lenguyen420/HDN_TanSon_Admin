@@ -55,6 +55,7 @@ export function createInitialData(): AssociationData {
       name: "Hội Doanh nghiệp Phường Tân Sơn",
       slogan: "Trách nhiệm - Sẵn sàng - Vươn mình",
       introduction: "",
+      introductionVideoUrl: "",
       mission: "",
       department: "",
       address: "",

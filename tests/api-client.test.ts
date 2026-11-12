@@ -1,3 +1,4 @@
+import { settingsApi, settingsFields, type SettingsPayload } from "../services/api/settingsApi.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
@@ -182,4 +183,20 @@ test("network and timeout failures have readable messages", async () => {
     throw new AxiosError("timeout", "ECONNABORTED", config);
   };
   await assert.rejects(memberApi.getAll(), /phản hồi quá lâu/);
+});
+
+test("settings transport preserves the introduction video URL including explicit removal", async (t) => {
+  const previous = axiosInstance.defaults.adapter;
+  t.after(() => { axiosInstance.defaults.adapter = previous; });
+  assert.ok(settingsFields.includes("introductionVideoUrl"));
+  axiosInstance.defaults.adapter = async config => {
+    assert.equal(config.url,"/association/settings");
+    const payload=JSON.parse(config.data);
+    assert.ok(Object.hasOwn(payload,"introductionVideoUrl"));
+    return response(config,{data:{...payload,id:"association",updatedAt:null,updatedBy:null}});
+  };
+  const data=Object.fromEntries(settingsFields.map(key=>[key,""])) as SettingsPayload;
+  data.introductionVideoUrl="https://cdn.example.com/intro.mp4";
+  assert.equal((await settingsApi.update(data)).introductionVideoUrl,data.introductionVideoUrl);
+  assert.equal((await settingsApi.update({...data,introductionVideoUrl:""})).introductionVideoUrl,"");
 });
