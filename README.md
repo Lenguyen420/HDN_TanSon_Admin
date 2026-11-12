@@ -132,3 +132,10 @@ GET /api/v1/public/settings dành cho Mini App, không yêu cầu token và khô
 ## Backend Vercel
 
 Admin dùng https://behdntanson.vercel.app/api/v1. File .env.local dùng trên máy; .env.production chỉ chứa URL công khai và được lưu cùng source. Nếu hosting đã có biến ASSOCIATION_API_URL, đặt lại đúng URL này vì biến trên hosting được ưu tiên. Khởi động lại dev server hoặc redeploy sau khi thay đổi cấu hình. Không đặt MongoDB URI hoặc JWT secret vào frontend.
+
+
+## Thông báo đăng ký hội viên
+
+Chuông trên thanh điều hướng và mục Thông báo hiển thị 100 hồ sơ đăng ký gần nhất từ backend. Bấm thông báo để lọc đúng hồ sơ tại mục Đăng ký và thực hiện duyệt/từ chối; có nút Xem toàn bộ hồ sơ để bỏ lọc. Số hồ sơ chờ duyệt tính trên toàn bộ database. Inbox dùng proxy đăng nhập HttpOnly và tự cập nhật mỗi 5 giây khi trang hiển thị; tải lại ngay khi quay lại tab. Trạng thái đã đọc lưu theo tài khoản trên trình duyệt hiện tại. Danh sách thông báo nội dung của Hội vẫn giữ nguyên bên dưới.
+
+Deploy backend trước rồi redeploy admin. Đây là thông báo trong ứng dụng, không gửi email hoặc tin nhắn ngoài ứng dụng.

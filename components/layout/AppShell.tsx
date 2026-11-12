@@ -15,6 +15,8 @@ import LogoutButton from "@/components/auth/LogoutButton";
 import { getStoredAdminUser } from "@/services/api/authSession";
 import { navigation } from "@/components/shared/association/config";
 
+import { RegistrationInboxProvider, RegistrationInboxLink } from "@/components/notifications/RegistrationInbox";
+
 export default function AppShell({
   activeHref = "/",
   children,
@@ -51,7 +53,7 @@ export default function AppShell({
     item.label.toLocaleLowerCase("vi").includes(query.toLocaleLowerCase("vi")),
   );
   return (
-    <div className="admin-layout">
+    <RegistrationInboxProvider><div className="admin-layout">
       {open && (
         <button
           className="sidebar-overlay"
@@ -138,6 +140,7 @@ export default function AppShell({
             <strong>{current?.label || "Tổng quan"}</strong>
           </div>
           <div className="topbar-actions">
+            <RegistrationInboxLink />
             <span className="demo-badge">
               <span />
               Quản trị Hội
@@ -196,6 +199,6 @@ export default function AppShell({
           <span>Hội Doanh nghiệp Phường Tân Sơn</span>
         </footer>
       </div>
-    </div>
+    </div></RegistrationInboxProvider>
   );
 }

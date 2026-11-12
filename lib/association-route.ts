@@ -7,6 +7,7 @@ const collections = new Set([
   "notifications",
   "banners",
   "settings",
+  "registration-inbox",
 ]);
 
 type RouteResult =
@@ -26,7 +27,10 @@ export function resolveAssociationRoute(
     return { status: 404 };
 
   let allowed: string[];
-  if (collection === "settings") {
+  if (collection === "registration-inbox") {
+    if (segments.length !== 1) return { status: 404 };
+    allowed = ["GET"];
+  } else if (collection === "settings") {
     if (segments.length !== 1) return { status: 404 };
     allowed = ["GET", "PUT"];
   } else if (segments.length === 3) {

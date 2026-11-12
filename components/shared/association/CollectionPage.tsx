@@ -242,6 +242,13 @@ export default function CollectionPage({ section }: { section: string }) {
     ],
   });
   const [query, setQuery] = useState("");
+  const [notificationTarget, setNotificationTarget] = useState("");
+  useEffect(() => {
+    if (section !== "registrations") return;
+    const target = new URLSearchParams(window.location.search).get("registrationId") || "";
+    const timer = window.setTimeout(() => setNotificationTarget(target), 0);
+    return () => window.clearTimeout(timer);
+  }, [section]);
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [editor, setEditor] = useState<{
@@ -272,7 +279,7 @@ export default function CollectionPage({ section }: { section: string }) {
         ),
     [config, data],
   );
-  const filtered = records.filter(
+  const filtered = records.filter((item) => !notificationTarget || item.id === notificationTarget).filter(
     (item) =>
       (!status || item.status === status) &&
       (!query ||
@@ -338,6 +345,7 @@ export default function CollectionPage({ section }: { section: string }) {
           Thêm {config.singular}
         </button>
       </div>
+      {notificationTarget && <p role="status">Đang xem hồ sơ được chọn từ thông báo. <button type="button" className="button" onClick={() => { setNotificationTarget(""); setPage(1); }}>Xem toàn bộ hồ sơ</button></p>}
       {error && (
         <p className="error-message" role="alert">
           {error}
@@ -399,7 +407,7 @@ export default function CollectionPage({ section }: { section: string }) {
               placeholder={`Tìm ${config.singular}…`}
               value={query}
               onChange={(event) => {
-                setQuery(event.target.value);
+                setNotificationTarget(""); setQuery(event.target.value);
                 setPage(1);
               }}
             />

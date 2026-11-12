@@ -69,3 +69,10 @@ test("proxy rejects unknown APIs, traversal, extra segments and unsupported oper
   ] as const)
     assert.equal(resolveAssociationRoute(method, [...segments]).status, 405);
 });
+
+
+test("registration inbox is an authenticated proxy target with GET only", () => {
+  assert.deepEqual(resolveAssociationRoute("GET", ["registration-inbox"]), {path: "/admin/registration-inbox"});
+  assert.equal(resolveAssociationRoute("POST", ["registration-inbox"]).status, 405);
+  assert.equal(resolveAssociationRoute("GET", ["registration-inbox", "id"]).status, 404);
+});
