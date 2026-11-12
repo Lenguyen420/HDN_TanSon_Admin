@@ -81,6 +81,7 @@ const memberFields: Field[] = [
   { key: "avatar", label: "URL ảnh đại diện" },
   { key: "name", label: "Họ và tên", required: true },
   { key: "company", label: "Doanh nghiệp", required: true },
+  { key: "companyFoundedAt", label: "Ngày thành lập doanh nghiệp", type: "date" },
   { key: "jobTitle", label: "Chức vụ tại doanh nghiệp" },
   { key: "phone", label: "Số điện thoại", type: "tel" },
   { key: "email", label: "Email", type: "email" },
@@ -127,6 +128,7 @@ export const sections: Record<string, SectionConfig> = {
     fields: [
       { key: "fullName", label: "Họ và tên", required: true },
       { key: "company", label: "Tên doanh nghiệp", required: true },
+      { key: "companyFoundedAt", label: "Ngày thành lập doanh nghiệp", type: "date" },
       { key: "taxCode", label: "Mã số thuế" },
       { key: "phone", label: "Điện thoại", type: "tel", required: true },
       { key: "email", label: "Email", type: "email" },
