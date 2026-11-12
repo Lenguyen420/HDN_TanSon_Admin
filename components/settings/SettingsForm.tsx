@@ -6,6 +6,11 @@ import { useState, type FormEvent } from "react";
 import { Download, Save } from "lucide-react";
 import type { AssociationRecord } from "@/services/association-store";
 import { saveAssociationSettings } from "@/services/association-api";
+import {
+  loadAssociationData,
+  remoteCollections,
+  type DataKey,
+} from "@/services/association-data";
 import { useAssociationData } from "@/components/shared/association/useAssociationData";
 
 const groups = [
@@ -46,9 +51,10 @@ const groups = [
 ];
 
 export default function SettingsForm() {
-  const { data, error } = useAssociationData();
+  const { data, error } = useAssociationData({ settings: true });
   const [failure, setFailure] = useState("");
   const [saving, setSaving] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving) return;
@@ -87,17 +93,34 @@ export default function SettingsForm() {
       setSaving(false);
     }
   }
-  function backup() {
-    if (!data) return;
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `tan-son-admin-${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    notify.success("Đã tạo bản sao dữ liệu.");
+  async function backup() {
+    if (backingUp) return;
+    setBackingUp(true);
+    try {
+      const snapshot = await loadAssociationData([
+        ...remoteCollections,
+        "settings",
+      ] as DataKey[]);
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(snapshot, null, 2)], {
+          type: "application/json",
+        }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `tan-son-admin-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      notify.success("Đã tạo bản sao dữ liệu.");
+    } catch (cause) {
+      notify.error(
+        cause instanceof Error
+          ? cause.message
+          : "Không tạo được bản sao dữ liệu.",
+      );
+    } finally {
+      setBackingUp(false);
+    }
   }
   return (
     <div className="page-stack">
@@ -110,10 +133,10 @@ export default function SettingsForm() {
         <button
           className="button button-secondary"
           onClick={backup}
-          disabled={!data || Boolean(error) || saving}
+          disabled={!data || Boolean(error) || saving || backingUp}
         >
           <Download size={17} />
-          Xuất bản sao dữ liệu
+          {backingUp ? "Đang tạo bản sao…" : "Xuất bản sao dữ liệu"}
         </button>
       </div>
       {(error || failure) && (

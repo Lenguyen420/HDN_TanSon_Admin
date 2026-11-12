@@ -26,7 +26,9 @@ import {
 import { getValue } from "@/services/association-store";
 
 export default function DashboardPage() {
-  const { data, error } = useAssociationData();
+  const { data, error } = useAssociationData({
+    collections: ["members", "registrations", "events", "news"],
+  });
   const collections = data?.collections;
   const members = collections?.members || [];
   const fees = collections?.fees || [];

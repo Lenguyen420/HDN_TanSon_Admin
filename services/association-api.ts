@@ -1,10 +1,17 @@
-import { memberApi, registrationApi, settingsApi } from "@/services/api";
-import { settingsFields, type SettingsPayload } from "./api/settingsApi";
+import { registrationApi, settingsApi } from "./api/index.ts";
+import { settingsFields, type SettingsPayload } from "./api/settingsApi.ts";
 import {
-  contentApis,
   contentCollections,
   type ContentCollection,
-} from "./api/contentApi";
+} from "./api/contentApi.ts";
+import {
+  collectionApi,
+  cacheSavedRecord,
+  cacheDeletedRecord,
+  cacheSavedSettings,
+  invalidateRemoteData,
+  type RemoteCollection,
+} from "./association-data.ts";
 import {
   readAssociationData,
   saveAssociationRecord,
@@ -12,8 +19,7 @@ import {
   type AssociationRecord,
   type AssociationData,
   type Collection,
-} from "./association-store";
-const CHANGED = "association-members-change";
+} from "./association-store.ts";
 const memberKeys = [
   "id",
   "name",
@@ -35,31 +41,17 @@ function payload(record: AssociationRecord, keys = memberKeys) {
       .map((key) => [key, record[key]]),
   );
 }
-function changed() {
-  window.dispatchEvent(new Event(CHANGED));
-}
-export function subscribeMembers(callback: () => void) {
-  window.addEventListener(CHANGED, callback);
-  return () => window.removeEventListener(CHANGED, callback);
-}
-export function getAssociationSettings() {
-  return settingsApi.get();
-}
 export async function saveAssociationSettings(record: AssociationRecord) {
   const values = Object.fromEntries(
     settingsFields.map((key) => [key, String(record[key] ?? "")]),
   ) as SettingsPayload;
   const settings = await settingsApi.update(values);
-  changed();
+  cacheSavedSettings(settings);
   return settings;
 }
-export function listMembers() {
-  return listCollection("members");
-}
-export function listRegistrations() {
-  return listCollection("registrations");
-}
-export function isBackendCollection(collection: Collection) {
+export function isBackendCollection(
+  collection: Collection,
+): collection is RemoteCollection {
   return (
     collection === "members" ||
     collection === "registrations" ||
@@ -106,38 +98,6 @@ const contentKeys: Record<ContentCollection, string[]> = {
   ],
   banners: ["id", "image", "alt", "order", "status"],
 };
-function collectionApi(collection: Collection) {
-  if (collection === "members") return memberApi;
-  if (collection === "registrations") return registrationApi;
-  return contentApis[collection as ContentCollection];
-}
-export async function listContent() {
-  const entries = await Promise.all(
-    contentCollections.map(
-      async (key) => [key, await listCollection(key)] as const,
-    ),
-  );
-  return Object.fromEntries(entries) as Record<
-    ContentCollection,
-    AssociationRecord[]
-  >;
-}
-async function listCollection(
-  collection: "members" | "registrations" | ContentCollection,
-) {
-  const all: AssociationRecord[] = [];
-  let page = 1;
-  let total = 0;
-  do {
-    const api = collectionApi(collection);
-    const body = await api.getAll({ limit: 100, page });
-    all.push(...body.data);
-    total = body.pagination.total;
-    if (!body.data.length) break;
-    page++;
-  } while (all.length < total);
-  return all;
-}
 export async function saveRecord(
   collection: Collection,
   record: AssociationRecord,
@@ -157,9 +117,10 @@ export async function saveRecord(
         ? registrationKeys
         : contentKeys[collection as ContentCollection],
   );
-  if (isExisting) await api.update(record.id, data);
-  else await api.create(data);
-  changed();
+  const saved = isExisting
+    ? await api.update(record.id, data)
+    : await api.create(data);
+  cacheSavedRecord(collection, saved);
 }
 export async function removeRecord(collection: Collection, id: string) {
   if (!isBackendCollection(collection)) {
@@ -185,13 +146,14 @@ export async function removeRecord(collection: Collection, id: string) {
     );
   const api = collectionApi(collection);
   await api.delete(id);
-  changed();
+  cacheDeletedRecord(collection, id);
 }
 export async function approveRegistrationOnBackend(id: string) {
-  await registrationApi.approve(id);
-  changed();
+  const result = await registrationApi.approve(id);
+  invalidateRemoteData("members");
+  cacheSavedRecord("registrations", result.registration);
 }
 export async function rejectRegistrationOnBackend(id: string, reason: string) {
-  await registrationApi.reject(id, reason);
-  changed();
+  const saved = await registrationApi.reject(id, reason);
+  cacheSavedRecord("registrations", saved);
 }

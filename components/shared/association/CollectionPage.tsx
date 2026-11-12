@@ -235,7 +235,12 @@ function DetailDialog({
 
 export default function CollectionPage({ section }: { section: string }) {
   const config = sections[section];
-  const { data, error } = useAssociationData();
+  const { data, error } = useAssociationData({
+    collections: [
+      config.collection,
+      ...config.fields.flatMap((field) => (field.source ? [field.source] : [])),
+    ],
+  });
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);

@@ -13,6 +13,10 @@ Frontend Next.js 16 chạy tại http://localhost:3003, kết nối backend Expr
 
 ## Kết nối backend
 
+Tối ưu tải dữ liệu: mỗi trang Admin chỉ yêu cầu collection đang sử dụng và các danh sách liên kết cần cho biểu mẫu. Cache trong bộ nhớ 30 giây dùng chung khi chuyển trang, gộp request trùng; khi quay lại cửa sổ sẽ kiểm tra dữ liệu hết hạn. Sau thêm/sửa/xóa, danh sách cập nhật từ kết quả backend, không tải lại toàn bộ dữ liệu. Duyệt hồ sơ cập nhật hồ sơ và làm mất hiệu lực cache hội viên. Dữ liệu này không được ghi vào localStorage; cache HTTP/API quản trị vẫn là `no-store`.
+
+`vercel.json` đặt Functions ở Singapore (`sin1`) cùng khu vực MongoDB Atlas hiện tại; cần redeploy Admin và backend để áp dụng. Kiểm tra lại region nếu sau này đổi cluster Atlas.
+
 Các API dữ liệu dùng chung route `app/api/association/[...path]/route.ts`, giới hạn theo danh sách chức năng và phương thức hợp lệ. URL hiện có không đổi. Tổng số route động giảm từ 13 xuống 6: bốn route xác thực, một route dữ liệu, một route ảnh. Các trang quản trị tiếp tục được build tĩnh. Service Axios đặt tại `services/api/`, tách khỏi thư mục API server. Đã bỏ các route chuyển tiếp riêng bị lặp và script PM2 của dự án cũ.
 
 File `.env.local` của frontend:
