@@ -31,6 +31,7 @@ import {
 import { labels, sections, statusLabels } from "./config";
 import { useAssociationData } from "./useAssociationData";
 import RecordDialog from "./RecordDialog";
+import MemberAvatar from "./MemberAvatar";
 
 export function formatDate(value: unknown) {
   const text = String(value ?? "");
@@ -516,13 +517,7 @@ export default function CollectionPage({ section }: { section: string }) {
                               onClick={() => setDetail(record)}
                             >
                               {["name", "fullName"].includes(column) && (
-                                <span className="member-avatar">
-                                  {String(value)
-                                    .split(" ")
-                                    .slice(-2)
-                                    .map((word) => word[0])
-                                    .join("")}
-                                </span>
+                                <MemberAvatar name={String(value || "")} avatar={record.avatar} />
                               )}
                               <span>
                                 {String(value ?? "—")}
