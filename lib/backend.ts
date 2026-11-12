@@ -1,4 +1,5 @@
 import "server-only";
+import { isSameOrigin } from "./same-origin";
 import { NextRequest, NextResponse } from "next/server";
 const cookieNames = [
   "admin_session",
@@ -11,11 +12,7 @@ export function backendUrl(path: string) {
   return base + path;
 }
 export function sameOrigin(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  return (
-    (!origin || origin === request.nextUrl.origin) &&
-    request.headers.get("sec-fetch-site") !== "cross-site"
-  );
+  return isSameOrigin(request);
 }
 export async function backendRequest(path: string, options: RequestInit = {}) {
   return fetch(backendUrl(path), {

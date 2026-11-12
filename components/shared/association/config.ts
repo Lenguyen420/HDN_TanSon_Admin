@@ -397,6 +397,7 @@ export const navigation = [
     icon: Handshake,
     group: "Nội dung & hoạt động",
   },
+  { label: "Giao thương", href: "/admin/trade", icon: Handshake, group: "Nội dung & hoạt động" },
   {
     label: "Banner trang chủ",
     href: "/admin/banners",

@@ -168,3 +168,8 @@ Video mới từ máy tính yêu cầu backend chia phần 256 KiB, tải tối 
 Proxy /uploads cache ảnh UUID ở Next.js Data Cache trong 24 giờ, dùng lại cho các lần truy cập sau. Video Range và tài liệu vẫn stream với no-store ở upstream, không trộn cache giữa các khoảng byte. Thay ảnh tạo URL UUID mới nên không cần xóa cache ảnh cũ.
 
 vercel.json đặt Functions tại sin1 để cùng vùng backend hiện tại. Cần redeploy cả admin và backend để áp dụng các tối ưu. Cache không loại bỏ độ trễ lần tải đầu; tốc độ thực tế còn phụ thuộc mạng và MongoDB.
+
+
+## Giao thương doanh nghiệp
+
+Mở /admin/trade hoặc Giao thương trong điều hướng. Các tab quản lý tin, danh mục, đánh giá, hội thoại, thống kê, tài khoản và thông báo dùng API backend qua proxy /api/trade/admin; giữ cookie HttpOnly. SUPER_ADMIN quản lý danh mục/tài khoản, STAFF kiểm duyệt nội dung. Danh mục dùng version để phát hiện sửa đồng thời. Chưa có dữ liệu mẫu; tạo danh mục đầu tiên sau khi deploy BE rồi mới deploy admin/Mini App. Xem docs/trade-module.md trong repo backend để biết hợp đồng API và các quy tắc.
