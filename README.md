@@ -146,3 +146,7 @@ Deploy backend trước rồi redeploy admin. Đây là thông báo trong ứng 
 
 
 Ảnh hội viên: trường URL ảnh đại diện trong form Hội viên/Ban chấp hành được gửi về backend bằng avatar. Dùng URL HTTP(S) của ảnh hoặc đường dẫn uploads/... hợp lệ; không nhập base64 vào trường URL. Ảnh được hiển thị trên Mini App khi backend và Mini App đã deploy bản hỗ trợ avatar.
+
+## Thông báo vắng mặt sự kiện
+
+Chuông thông báo và trang Thông báo tải thêm `/association/event-inbox`. Người đã đăng ký trên Mini App nhưng chưa điểm danh sau giờ kết thúc xuất hiện tại đây. Chi tiết sự kiện có bảng đăng ký/điểm danh phân trang, tự cập nhật trạng thái. Mốc thời gian và trạng thái do backend tính, không dựa vào đồng hồ trình duyệt admin. Cần deploy backend mới trước dashboard.

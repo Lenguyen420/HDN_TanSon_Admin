@@ -8,6 +8,7 @@ const collections = new Set([
   "banners",
   "settings",
   "registration-inbox",
+  "event-inbox",
   "event-files",
 ]);
 
@@ -31,12 +32,14 @@ export function resolveAssociationRoute(
   if (collection === "event-files") {
     if (segments.length !== 1) return { status: 404 };
     allowed = ["POST"];
-  } else if (collection === "registration-inbox") {
+  } else if (["registration-inbox", "event-inbox"].includes(collection)) {
     if (segments.length !== 1) return { status: 404 };
     allowed = ["GET"];
   } else if (collection === "settings") {
     if (segments.length !== 1) return { status: 404 };
     allowed = ["GET", "PUT"];
+  } else if (collection === "events" && action === "attendance" && segments.length === 3) {
+    allowed = ["GET"];
   } else if (segments.length === 3) {
     if (
       collection !== "registrations" ||

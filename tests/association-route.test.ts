@@ -76,3 +76,11 @@ test("registration inbox is an authenticated proxy target with GET only", () => 
   assert.equal(resolveAssociationRoute("POST", ["registration-inbox"]).status, 405);
   assert.equal(resolveAssociationRoute("GET", ["registration-inbox", "id"]).status, 404);
 });
+
+test("event inbox and attendance roster are read-only admin proxy targets", () => {
+  assert.deepEqual(resolveAssociationRoute("GET", ["event-inbox"]), {path:"/admin/event-inbox"});
+  assert.equal(resolveAssociationRoute("POST", ["event-inbox"]).status,405);
+  assert.equal(resolveAssociationRoute("GET", ["event-inbox","id"]).status,404);
+  assert.deepEqual(resolveAssociationRoute("GET", ["events","event-1","attendance"]), {path:"/admin/events/event-1/attendance"});
+  assert.equal(resolveAssociationRoute("POST", ["events","event-1","attendance"]).status,405);
+});

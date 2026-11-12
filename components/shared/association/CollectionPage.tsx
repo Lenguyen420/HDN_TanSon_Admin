@@ -1,4 +1,5 @@
 "use client";
+import EventParticipationList from "@/components/events/EventParticipationList";
 
 import Image from "next/image";
 import { imageUrl } from "@/services/image-url";
@@ -257,6 +258,7 @@ function DetailDialog({
             </>
           )}
         </dl>
+        {section === "events" && <EventParticipationList eventId={record.id} />}
       </div>
       <div className="dialog-footer">
         <button className="button button-secondary" onClick={onClose}>
@@ -278,9 +280,9 @@ export default function CollectionPage({ section }: { section: string }) {
   const [query, setQuery] = useState("");
   const [notificationTarget, setNotificationTarget] = useState("");
   useEffect(() => {
-    if (section !== "registrations") return;
+    if (!["registrations", "events"].includes(section)) return;
     const target =
-      new URLSearchParams(window.location.search).get("registrationId") || "";
+      new URLSearchParams(window.location.search).get(section === "events" ? "eventId" : "registrationId") || "";
     const timer = window.setTimeout(() => setNotificationTarget(target), 0);
     return () => window.clearTimeout(timer);
   }, [section]);
@@ -384,7 +386,7 @@ export default function CollectionPage({ section }: { section: string }) {
       </div>
       {notificationTarget && (
         <p role="status">
-          Đang xem hồ sơ được chọn từ thông báo.{" "}
+          {section === "events" ? "Đang xem sự kiện được chọn từ thông báo." : "Đang xem hồ sơ được chọn từ thông báo."}{" "}
           <button
             type="button"
             className="button"
@@ -393,7 +395,7 @@ export default function CollectionPage({ section }: { section: string }) {
               setPage(1);
             }}
           >
-            Xem toàn bộ hồ sơ
+            Xem tất cả
           </button>
         </p>
       )}
