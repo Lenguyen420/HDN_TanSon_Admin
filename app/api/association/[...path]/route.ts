@@ -69,8 +69,8 @@ async function handle(request: NextRequest, context: Context) {
         body: request.method === "GET" ? undefined : await request.text(),
       }),
     );
-  } catch {
-    return unavailable();
+  } catch (error) {
+    return unavailable(error);
   }
 }
 

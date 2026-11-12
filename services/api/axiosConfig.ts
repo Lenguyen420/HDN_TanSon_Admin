@@ -9,7 +9,7 @@ import {
 // Next.js forwards HttpOnly cookies to the backend as a Bearer token.
 const axiosInstance = axios.create({
   baseURL: "/api",
-  timeout: 15000,
+  timeout: 60000,
   withCredentials: true,
   headers: { Accept: "application/json", "Content-Type": "application/json" },
 });

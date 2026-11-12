@@ -64,6 +64,8 @@ test(
         auth: req.headers.authorization,
         body: text ? JSON.parse(text) : undefined,
       });
+      if (req.url.includes("connection-failure")) return req.socket.destroy();
+      if (req.url === "/api/v1/admin/settings" && req.method === "PUT") await delay(16000);
       res.setHeader("Content-Type", "application/json");
       if (req.url.includes("rate-limited")) {
         res.writeHead(429, { "Retry-After": "30" });
@@ -228,6 +230,15 @@ test(
         Buffer.from(await videoRange.arrayBuffer()),
         fileBytes.subarray(2, 6),
       );
+      const slowSave = await call("/api/association/settings", "PUT", { name: "Test Hội", slogan: "Test" });
+      assert.equal(slowSave.status, 200, "Save should allow a backend response taking more than 15 seconds");
+      assert.equal(received.at(-1).method, "PUT");
+      assert.deepEqual(received.at(-1).body, { name: "Test Hội", slogan: "Test" });
+      const connectionFailure = await call("/api/association/news/connection-failure");
+      assert.equal(connectionFailure.status, 502);
+      const failureMessage = (await connectionFailure.json()).message;
+      assert.match(failureMessage, /ASSOCIATION_API_URL/);
+      assert.doesNotMatch(failureMessage, /4000|MongoDB/);
       const uploaded = await fetch(base + "/api/association/event-files", {
         method: "POST",
         headers: {

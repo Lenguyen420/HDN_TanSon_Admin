@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       if (!response.ok) return unavailable();
     }
     return clearCookies(json({ success: true, message: "Đã đăng xuất." }));
-  } catch {
-    return unavailable();
+  } catch (error) {
+    return unavailable(error);
   }
 }

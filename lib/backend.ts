@@ -21,7 +21,7 @@ export async function backendRequest(path: string, options: RequestInit = {}) {
   return fetch(backendUrl(path), {
     ...options,
     cache: "no-store",
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(45000),
     headers: { Accept: "application/json", ...options.headers },
   });
 }
@@ -31,13 +31,28 @@ export function json(body: unknown, status = 200) {
     headers: { "Cache-Control": "no-store" },
   });
 }
-export function unavailable() {
+export function unavailable(error?: unknown) {
+  const failure = error instanceof Error ? error : undefined;
+  const cause = failure?.cause as { code?: unknown } | undefined;
+  const timedOut =
+    failure?.name === "TimeoutError" ||
+    [
+      "UND_ERR_CONNECT_TIMEOUT",
+      "UND_ERR_HEADERS_TIMEOUT",
+      "ETIMEDOUT",
+    ].includes(String(cause?.code));
+  // Do not log request bodies, cookies, tokens, or connection strings.
+  console.error("[Backend proxy]", {
+    name: failure?.name ?? "InvalidResponse",
+    code: typeof cause?.code === "string" ? cause.code : undefined,
+  });
   return json(
     {
-      message:
-        "Không kết nối được backend Hội. Vui lòng kiểm tra backend cổng 4000 và cấu hình MongoDB.",
+      message: timedOut
+        ? "Backend phản hồi quá lâu. Hãy kiểm tra lại dữ liệu đã lưu trước khi thử lại."
+        : "Admin không kết nối được backend. Kiểm tra kết nối mạng và cấu hình ASSOCIATION_API_URL trong terminal chạy admin.",
     },
-    502,
+    timedOut ? 504 : 502,
   );
 }
 export function clearCookies(response: NextResponse) {

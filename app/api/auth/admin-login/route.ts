@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       json({ data: { user: data.user, expiresIn: data.expiresIn } }),
       data,
     );
-  } catch {
-    return unavailable();
+  } catch (error) {
+    return unavailable(error);
   }
 }

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
         headers: { Authorization: "Bearer " + token },
       }),
     );
-  } catch {
-    return unavailable();
+  } catch (error) {
+    return unavailable(error);
   }
 }
