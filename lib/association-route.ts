@@ -58,7 +58,7 @@ export function resolveAssociationRoute(
   ) {
     allowed = ["GET"];
   } else if (
-    collection === "registrations" &&
+    ["members", "registrations"].includes(collection) &&
     action === "business-license" &&
     segments.length === 3
   ) {

@@ -16,7 +16,11 @@ function validateImage(file: File) {
     throw new Error("Ảnh quá lớn. Vui lòng chọn ảnh không quá 10 MB.");
 }
 
-export async function readSelectedImage(form: FormData, name: string) {
+export async function readSelectedImage(
+  form: FormData,
+  name: string,
+  options: { maxEdge?: number; maxBytes?: number } = {},
+) {
   const file = form.get(`${name}:file`);
   if (!(file instanceof File) || !file.size)
     return String(form.get(name) ?? "").trim();
@@ -26,7 +30,10 @@ export async function readSelectedImage(form: FormData, name: string) {
     const image = new window.Image();
     image.src = url;
     await image.decode();
-    const scale = Math.min(1, 1280 / Math.max(image.width, image.height));
+    const scale = Math.min(
+      1,
+      (options.maxEdge ?? 1280) / Math.max(image.width, image.height),
+    );
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(image.width * scale));
     canvas.height = Math.max(1, Math.round(image.height * scale));
@@ -34,7 +41,10 @@ export async function readSelectedImage(form: FormData, name: string) {
     if (!context) throw new Error("Không thể xử lý ảnh trên trình duyệt này.");
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
     const result = canvas.toDataURL("image/webp", 0.82);
-    if (result.length > 1_400_000)
+    if (
+      result.length > 1_400_000 ||
+      (options.maxBytes && atob(result.split(",")[1]).length > options.maxBytes)
+    )
       throw new Error("Ảnh có quá nhiều chi tiết. Vui lòng chọn ảnh nhỏ hơn.");
     return result;
   } catch (error) {
@@ -52,10 +62,12 @@ export default function ImagePicker({
   name,
   value,
   required = false,
+  allowRemove = true,
 }: {
   name: string;
   value: string;
   required?: boolean;
+  allowRemove?: boolean;
 }) {
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
@@ -91,7 +103,7 @@ export default function ImagePicker({
           <ImagePlus size={19} />{" "}
           {source ? "Chọn ảnh khác" : "Chọn ảnh từ máy tính"}
         </button>
-        {source && (
+        {source && allowRemove && (
           <button
             type="button"
             className="button button-secondary"

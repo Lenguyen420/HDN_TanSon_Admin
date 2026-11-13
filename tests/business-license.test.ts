@@ -30,3 +30,20 @@ test("license preview is an authenticated read-only registration proxy target", 
     404,
   );
 });
+
+test("member license preview uses the authenticated read-only proxy", () => {
+  assert.equal(
+    resolveAssociationRoute("GET", ["members", "member-id", "business-license"])
+      .path,
+    "/admin/members/member-id/business-license",
+  );
+  for (const method of ["POST", "PUT", "DELETE"])
+    assert.equal(
+      resolveAssociationRoute(method, [
+        "members",
+        "member-id",
+        "business-license",
+      ]).status,
+      405,
+    );
+});

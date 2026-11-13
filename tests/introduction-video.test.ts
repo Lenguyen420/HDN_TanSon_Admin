@@ -200,3 +200,40 @@ test("proxy permits multipart upload and keeps legacy playback compatibility", (
       resolveAssociationRoute(method, ["introduction-videos", ...parts]).path,
     );
 });
+
+test("Vercel upload fallback sends small chunks and completes the video", async () => {
+  const id = "00000000-0000-4000-8000-000000000123";
+  const resultUrl = "/api/v1/public/introduction-videos/" + id;
+  const parts: number[] = [];
+  let completed = false;
+  axiosInstance.defaults.adapter = async (config) => {
+    let data: unknown = {};
+    if (config.url?.endsWith("/upload")) throw new ApiError(413, "Too large");
+    if (config.url === "/association/introduction-videos")
+      data = { id, chunkSize: 256 * 1024, count: 3 };
+    else if (config.method === "put") {
+      assert.ok(config.data instanceof Blob);
+      parts.push(config.data.size);
+      assert.ok(config.data.size <= 256 * 1024);
+    } else if (config.url?.endsWith("/complete")) {
+      completed = true;
+      data = { url: resultUrl };
+    } else assert.fail("Unexpected request: " + config.url);
+    return {
+      config,
+      data: { data },
+      status: 200,
+      statusText: "OK",
+      headers: new AxiosHeaders(),
+    };
+  };
+  assert.equal(
+    await uploadIntroductionVideo(
+      new File([new Uint8Array(512 * 1024 + 13)], "fallback.mp4"),
+      () => {},
+    ),
+    resultUrl,
+  );
+  assert.deepEqual(parts, [256 * 1024, 256 * 1024, 13]);
+  assert.equal(completed, true);
+});

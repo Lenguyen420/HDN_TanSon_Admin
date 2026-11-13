@@ -4,9 +4,11 @@ import { useState } from "react";
 export default function BusinessLicensePreview({
   id,
   available,
+  collection = "registrations",
 }: {
   id: string;
   available: boolean;
+  collection?: "members" | "registrations";
 }) {
   const [failed, setFailed] = useState(false);
   if (!available)
@@ -17,7 +19,9 @@ export default function BusinessLicensePreview({
       </section>
     );
   const url =
-    "/api/association/registrations/" +
+    "/api/association/" +
+    collection +
+    "/" +
     encodeURIComponent(id) +
     "/business-license";
   return (

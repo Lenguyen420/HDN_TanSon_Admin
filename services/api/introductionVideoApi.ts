@@ -1,3 +1,4 @@
+import { ApiError } from "./apiError.ts";
 import axiosInstance from "./axiosConfig.ts";
 
 export const managedVideoPattern =
@@ -84,6 +85,20 @@ export function uploadIntroductionVideo(
       progress("Đã lưu video.");
       return result.url;
     } catch (error) {
+      // Vercel cannot accept a large multipart body or persist local uploads.
+      if (
+        error instanceof ApiError &&
+        (error.statusCode === 413 ||
+          (error.statusCode === 503 &&
+            /Vercel|ổ đĩa bền vững/.test(error.message)))
+      ) {
+        const { uploadVideoChunks } =
+          await import("./introductionVideoChunkUpload.ts");
+        const url = await uploadVideoChunks(file, progress);
+        uploaded.set(file, url);
+        progress("Đã lưu video.");
+        return url;
+      }
       throw new Error(
         "Lưu video: " +
           (error instanceof Error ? error.message : "Không thể tải video."),

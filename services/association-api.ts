@@ -21,6 +21,7 @@ import {
   type Collection,
 } from "./association-store.ts";
 const memberKeys = [
+  "businessLicenseImage",
   "avatar",
   "id",
   "name",
@@ -61,6 +62,8 @@ export function isBackendCollection(
   );
 }
 const registrationKeys = [
+  "avatar",
+  "businessLicenseImage",
   "id",
   "fullName",
   "company",

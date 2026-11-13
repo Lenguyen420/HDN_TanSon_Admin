@@ -32,7 +32,10 @@ async function handle(request: NextRequest, context: Context) {
     );
 
   try {
-    if (path[0] === "registrations" && path[2] === "business-license") {
+    if (
+      ["members", "registrations"].includes(path[0]) &&
+      path[2] === "business-license"
+    ) {
       const response = await backendRequest(route.path, {
         headers: { Authorization: "Bearer " + token },
       });

@@ -123,9 +123,9 @@ function DetailDialog({
         </button>
       </div>
       <div className="dialog-body">
-        {section === "registrations" && <BusinessLicensePreview key={String(record.id)} id={String(record.id)} available={record.hasBusinessLicense === true} />}
+        {["members", "registrations"].includes(config.collection) && <BusinessLicensePreview collection={config.collection === "members" ? "members" : "registrations"} key={String(record.id)} id={String(record.id)} available={record.hasBusinessLicense === true} />}
         <dl className="detail-grid">
-          {config.fields.map((field) => {
+          {config.fields.filter(field => field.type !== "business-license").map((field) => {
             const value = getValue(record, field.key);
             const linked = field.source
               ? data.collections[field.source].find((item) => item.id === value)
@@ -143,7 +143,7 @@ function DetailDialog({
               >
                 <dt>{field.label}</dt>
                 <dd>
-                  {field.key === "image" && value ? (
+                  {field.type === "image" && value ? (
                     <Image
                       unoptimized
                       src={imageUrl(value)}

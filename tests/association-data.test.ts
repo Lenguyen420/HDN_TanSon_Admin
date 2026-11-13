@@ -84,25 +84,93 @@ test("admin loads only requested collection and updates CRUD without reloading l
   ]);
 });
 
-
 test("member portrait URLs are preserved in admin create/update payloads and can be cleared", async () => {
   const sent: unknown[] = [];
   axios.defaults.adapter = async (config) => {
-    const body = JSON.parse(config.data); sent.push(body.avatar);
-    return {data:{data:{...body,id:"portrait-member"}},status:200,statusText:"OK",headers:{},config};
+    const body = JSON.parse(config.data);
+    sent.push(body.avatar);
+    return {
+      data: { data: { ...body, id: "portrait-member" } },
+      status: 200,
+      statusText: "OK",
+      headers: {},
+      config,
+    };
   };
-  await saveRecord("members", {id:"portrait-member",name:"Hội viên",company:"Công ty",avatar:"https://example.com/photo.jpg"});
-  await saveRecord("members", {id:"portrait-member",name:"Hội viên",company:"Công ty",avatar:""}, true);
-  assert.deepEqual(sent,["https://example.com/photo.jpg",""]);
+  await saveRecord("members", {
+    id: "portrait-member",
+    name: "Hội viên",
+    company: "Công ty",
+    avatar: "https://example.com/photo.jpg",
+  });
+  await saveRecord(
+    "members",
+    { id: "portrait-member", name: "Hội viên", company: "Công ty", avatar: "" },
+    true,
+  );
+  assert.deepEqual(sent, ["https://example.com/photo.jpg", ""]);
 });
 
 test("company founding date is retained in registration and member saves", async () => {
   const sent: string[] = [];
-  axios.defaults.adapter = async config => {
-    const body = JSON.parse(config.data); sent.push(body.companyFoundedAt);
-    return {data:{data:{...body,id:"founded-member"}},status:200,statusText:"OK",headers:{},config};
+  axios.defaults.adapter = async (config) => {
+    const body = JSON.parse(config.data);
+    sent.push(body.companyFoundedAt);
+    return {
+      data: { data: { ...body, id: "founded-member" } },
+      status: 200,
+      statusText: "OK",
+      headers: {},
+      config,
+    };
   };
-  await saveRecord("members", {id:"founded-member",name:"Hội viên",company:"Doanh nghiệp",joinedAt:"2026-11-12",companyFoundedAt:"2010-05-20"});
-  await saveRecord("registrations", {id:"founded-registration",fullName:"Hội viên",company:"Doanh nghiệp",phone:"0900000001",date:"2026-11-12",companyFoundedAt:"2010-05-20"});
-  assert.deepEqual(sent,["2010-05-20","2010-05-20"]);
+  await saveRecord("members", {
+    id: "founded-member",
+    name: "Hội viên",
+    company: "Doanh nghiệp",
+    joinedAt: "2026-11-12",
+    companyFoundedAt: "2010-05-20",
+  });
+  await saveRecord("registrations", {
+    id: "founded-registration",
+    fullName: "Hội viên",
+    company: "Doanh nghiệp",
+    phone: "0900000001",
+    date: "2026-11-12",
+    companyFoundedAt: "2010-05-20",
+  });
+  assert.deepEqual(sent, ["2010-05-20", "2010-05-20"]);
+});
+
+test("member and registration saves include selected local image data", async () => {
+  const image = "data:image/png;base64,aGVsbG8=";
+  const sent: Record<string, unknown>[] = [];
+  axios.defaults.adapter = async (config) => {
+    const body = JSON.parse(config.data);
+    sent.push(body);
+    return {
+      config,
+      data: { data: body },
+      status: 201,
+      statusText: "Created",
+      headers: {},
+    };
+  };
+  await saveRecord("members", {
+    id: "asset-member",
+    name: "Hội viên",
+    avatar: image,
+    businessLicenseImage: image,
+  });
+  await saveRecord("registrations", {
+    id: "asset-registration",
+    fullName: "Hội viên",
+    avatar: image,
+    businessLicenseImage: image,
+  });
+  assert.equal(sent.length, 2);
+  for (const body of sent) {
+    assert.equal(body.avatar, image);
+    assert.equal(body.businessLicenseImage, image);
+  }
 });

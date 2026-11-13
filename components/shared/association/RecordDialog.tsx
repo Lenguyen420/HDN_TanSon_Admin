@@ -56,6 +56,25 @@ export default function RecordDialog({
       : { id: crypto.randomUUID() };
     try {
       for (const field of config.fields) {
+        if (field.type === "business-license") {
+          const file = form.get(field.key + ":file");
+          if (!(file instanceof File) || !file.size) {
+            if (!record && field.required)
+              throw new Error(
+                "Vui lòng chọn ảnh giấy phép kinh doanh từ máy tính.",
+              );
+            delete next[field.key];
+          } else
+            setValue(
+              next,
+              field.key,
+              await readSelectedImage(form, field.key, {
+                maxEdge: 2000,
+                maxBytes: 1024 * 1024,
+              }),
+            );
+          continue;
+        }
         if (field.type === "agenda" || field.type === "event-files") {
           setValue(
             next,
@@ -231,7 +250,7 @@ export default function RecordDialog({
                     ].map((item) => String(item.topic ?? ""))}
                   />
                 );
-              if (field.type === "image")
+              if (field.type === "image" || field.type === "business-license")
                 return (
                   <div key={field.key} className="form-field full-width">
                     <span>
@@ -240,8 +259,23 @@ export default function RecordDialog({
                     </span>
                     <ImagePicker
                       name={field.key}
-                      value={textValue}
-                      required={field.required}
+                      value={
+                        field.type === "business-license"
+                          ? record?.hasBusinessLicense
+                            ? "/api/association/" +
+                              config.collection +
+                              "/" +
+                              encodeURIComponent(String(record.id)) +
+                              "/business-license"
+                            : ""
+                          : textValue
+                      }
+                      required={
+                        field.type === "business-license"
+                          ? !record && field.required
+                          : field.required
+                      }
+                      allowRemove={field.type !== "business-license"}
                     />
                   </div>
                 );

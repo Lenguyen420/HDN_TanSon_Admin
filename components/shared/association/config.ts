@@ -31,7 +31,8 @@ export type Field = {
     | "agenda"
     | "time-range"
     | "event-files"
-    | "image";
+    | "image"
+    | "business-license";
   required?: boolean;
   options?: [string, string][];
   source?: "members" | "events";
@@ -78,10 +79,20 @@ const article: Field[] = [
   },
 ];
 const memberFields: Field[] = [
-  { key: "avatar", label: "URL ảnh đại diện" },
+  { key: "avatar", label: "Ảnh đại diện", type: "image" },
   { key: "name", label: "Họ và tên", required: true },
   { key: "company", label: "Doanh nghiệp", required: true },
-  { key: "companyFoundedAt", label: "Ngày thành lập doanh nghiệp", type: "date" },
+  {
+    key: "companyFoundedAt",
+    label: "Ngày thành lập doanh nghiệp",
+    type: "date",
+  },
+  {
+    key: "businessLicenseImage",
+    label: "Ảnh giấy phép kinh doanh",
+    type: "business-license",
+    required: true,
+  },
   { key: "jobTitle", label: "Chức vụ tại doanh nghiệp" },
   { key: "phone", label: "Số điện thoại", type: "tel" },
   { key: "email", label: "Email", type: "email" },
@@ -127,8 +138,19 @@ export const sections: Record<string, SectionConfig> = {
     columns: ["fullName", "company", "phone", "date", "status"],
     fields: [
       { key: "fullName", label: "Họ và tên", required: true },
+      { key: "avatar", label: "Ảnh đại diện", type: "image" },
       { key: "company", label: "Tên doanh nghiệp", required: true },
-      { key: "companyFoundedAt", label: "Ngày thành lập doanh nghiệp", type: "date" },
+      {
+        key: "companyFoundedAt",
+        label: "Ngày thành lập doanh nghiệp",
+        type: "date",
+      },
+      {
+        key: "businessLicenseImage",
+        label: "Ảnh giấy phép kinh doanh",
+        type: "business-license",
+        required: true,
+      },
       { key: "taxCode", label: "Mã số thuế" },
       { key: "phone", label: "Điện thoại", type: "tel", required: true },
       { key: "email", label: "Email", type: "email" },
@@ -397,7 +419,12 @@ export const navigation = [
     icon: Handshake,
     group: "Nội dung & hoạt động",
   },
-  { label: "Giao thương", href: "/admin/trade", icon: Handshake, group: "Nội dung & hoạt động" },
+  {
+    label: "Giao thương",
+    href: "/admin/trade",
+    icon: Handshake,
+    group: "Nội dung & hoạt động",
+  },
   {
     label: "Banner trang chủ",
     href: "/admin/banners",
