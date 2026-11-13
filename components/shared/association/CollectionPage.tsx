@@ -1,4 +1,5 @@
 "use client";
+import BusinessLicensePreview from "@/components/registrations/BusinessLicensePreview";
 import EventParticipationList from "@/components/events/EventParticipationList";
 
 import Image from "next/image";
@@ -122,6 +123,7 @@ function DetailDialog({
         </button>
       </div>
       <div className="dialog-body">
+        {section === "registrations" && <BusinessLicensePreview key={String(record.id)} id={String(record.id)} available={record.hasBusinessLicense === true} />}
         <dl className="detail-grid">
           {config.fields.map((field) => {
             const value = getValue(record, field.key);

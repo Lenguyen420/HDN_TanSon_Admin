@@ -19,6 +19,9 @@ test(
     const fileId = "00000000-0000-4000-8000-000000000000";
     const uploadBytes = Buffer.alloc(12 * 1024 * 1024, 9);
     uploadBytes.write("ftyp", 4);
+    const licenseBytes = Buffer.from([
+      137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0,
+    ]);
     const backend = createServer(async (req, res) => {
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
@@ -112,6 +115,19 @@ test(
               ? fileBytes.subarray(2, 6)
               : fileBytes,
         );
+      }
+      if (
+        req.url ===
+        "/api/v1/admin/registrations/license-record/business-license"
+      ) {
+        assert.equal(req.method, "GET");
+        assert.equal(req.headers.authorization, "Bearer test-access");
+        res.writeHead(200, {
+          "Content-Type": "image/png",
+          "Content-Length": String(licenseBytes.length),
+          "Cache-Control": "private, no-store",
+        });
+        return res.end(licenseBytes);
       }
       const text = bytes.toString();
       received.push({
@@ -343,6 +359,16 @@ test(
           .status,
         416,
       );
+      const licenseUrl =
+        base + "/api/association/registrations/license-record/business-license";
+      assert.equal((await fetch(licenseUrl)).status, 401);
+      const license = await fetch(licenseUrl, {
+        headers: { Cookie: "admin_access_token=test-access" },
+      });
+      assert.equal(license.status, 200);
+      assert.equal(license.headers.get("cache-control"), "private, no-store");
+      assert.equal(license.headers.get("content-type"), "image/png");
+      assert.deepEqual(Buffer.from(await license.arrayBuffer()), licenseBytes);
       const slowSave = await call("/api/association/settings", "PUT", {
         name: "Test Hội",
         slogan: "Test",

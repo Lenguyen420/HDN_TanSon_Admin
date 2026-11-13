@@ -32,6 +32,23 @@ async function handle(request: NextRequest, context: Context) {
     );
 
   try {
+    if (path[0] === "registrations" && path[2] === "business-license") {
+      const response = await backendRequest(route.path, {
+        headers: { Authorization: "Bearer " + token },
+      });
+      if (!response.ok) return await passResponse(response);
+      const type = response.headers.get("content-type") || "";
+      if (!/^image\/(jpeg|png|webp)$/.test(type))
+        return json({ message: "Ảnh giấy phép không hợp lệ." }, 502);
+      const headers = new Headers({
+        "Content-Type": type,
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      const length = response.headers.get("content-length");
+      if (length) headers.set("Content-Length", length);
+      return new Response(response.body, { status: response.status, headers });
+    }
     if (path[0] === "introduction-videos" && path[1] === "upload") {
       const contentType = request.headers.get("content-type") || "";
       if (

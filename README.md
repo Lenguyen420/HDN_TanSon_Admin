@@ -173,3 +173,7 @@ vercel.json đặt Functions tại sin1 để cùng vùng backend hiện tại. 
 ## Giao thương doanh nghiệp
 
 Mở /admin/trade hoặc Giao thương trong điều hướng. Các tab quản lý tin, danh mục, đánh giá, hội thoại, thống kê, tài khoản và thông báo dùng API backend qua proxy /api/trade/admin; giữ cookie HttpOnly. SUPER_ADMIN quản lý danh mục/tài khoản, STAFF kiểm duyệt nội dung. Danh mục dùng version để phát hiện sửa đồng thời. Chưa có dữ liệu mẫu; tạo danh mục đầu tiên sau khi deploy BE rồi mới deploy admin/Mini App. Xem docs/trade-module.md trong repo backend để biết hợp đồng API và các quy tắc.
+
+## Giấy phép kinh doanh đính kèm đăng ký
+
+Chi tiết hồ sơ đăng ký hiển thị ảnh giấy phép kinh doanh và liên kết mở ảnh gốc qua proxy có cookie đăng nhập. Backend lưu file riêng trong MongoDB, không đưa giấy phép vào uploads công khai. Hồ sơ cũ chưa đính kèm ảnh vẫn xem/sửa/duyệt được. Backend cần có GET `/api/v1/admin/registrations/:id/business-license` và cờ `hasBusinessLicense` trong hồ sơ.

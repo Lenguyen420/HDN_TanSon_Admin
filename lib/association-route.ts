@@ -57,6 +57,12 @@ export function resolveAssociationRoute(
     segments.length === 3
   ) {
     allowed = ["GET"];
+  } else if (
+    collection === "registrations" &&
+    action === "business-license" &&
+    segments.length === 3
+  ) {
+    allowed = ["GET"];
   } else if (segments.length === 3) {
     if (
       collection !== "registrations" ||
