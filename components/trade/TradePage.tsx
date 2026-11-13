@@ -17,7 +17,12 @@ const tabs = [
 ] as const;
 export default function TradePage() {
   const [tab, setTab] = useState<string>("posts"),
-    [postId, setPostId] = useState<string>();
+    [postId, setPostId] = useState<string | undefined>(() =>
+      typeof window === "undefined"
+        ? undefined
+        : new URLSearchParams(window.location.search).get("tradePostId") ||
+          undefined,
+    );
   return (
     <AppShell activeHref="/admin/trade">
       <main className="trade-workspace">

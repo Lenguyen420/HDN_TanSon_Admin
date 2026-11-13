@@ -16,6 +16,7 @@ interface Notice {
   id: string;
   registrationId?: string;
   eventId?: string;
+  tradePostId?: string;
   title: string;
   description: string;
   status: "pending" | "approved" | "rejected" | "absent";
@@ -36,8 +37,9 @@ export function RegistrationInboxProvider({
 }) {
   const [registrationItems, setRegistrationItems] = useState<Notice[]>([]);
   const [eventItems, setEventItems] = useState<Notice[]>([]);
-  const items = [...registrationItems, ...eventItems].sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt),
+  const [tradeItems, setTradeItems] = useState<Notice[]>([]);
+  const items = [...registrationItems, ...eventItems, ...tradeItems].sort(
+    (a, b) => b.createdAt.localeCompare(a.createdAt),
   );
   const [pending, setPending] = useState(0);
   const [readIds, setReadIds] = useState<string[]>([]);
@@ -50,12 +52,23 @@ export function RegistrationInboxProvider({
       if (busy || document.visibilityState === "hidden") return;
       busy = true;
       try {
-        const [registrations, events] = await Promise.allSettled([
+        const [registrations, events, trades] = await Promise.allSettled([
           api.get<{ data: Notice[]; pendingCount: number }>(
             "/association/registration-inbox?limit=100",
             { signal: controller.signal },
           ),
           api.get<{ data: Notice[] }>("/association/event-inbox?limit=100", {
+            signal: controller.signal,
+          }),
+          api.get<{
+            data: {
+              id: string;
+              type: string;
+              tradePostId: string;
+              title: string;
+              createdAt: string;
+            }[];
+          }>("/trade/admin/trade-notifications?limit=100", {
             signal: controller.signal,
           }),
         ]);
@@ -66,8 +79,24 @@ export function RegistrationInboxProvider({
           }
           if (events.status === "fulfilled")
             setEventItems(events.value.data.data);
+          if (trades.status === "fulfilled")
+            setTradeItems(
+              trades.value.data.data
+                .filter((n) => n.type === "TRADE_POST_SUBMITTED")
+                .map((n) => ({
+                  id: "trade-" + n.id,
+                  tradePostId: n.tradePostId,
+                  title: "Tin giao thương chờ duyệt",
+                  description: n.title,
+                  status: "pending" as const,
+                  createdAt: n.createdAt,
+                  href: "/admin/trade",
+                })),
+            );
           setError(
-            registrations.status === "rejected" || events.status === "rejected"
+            trades.status === "rejected" ||
+              registrations.status === "rejected" ||
+              events.status === "rejected"
               ? "Chưa tải đủ thông báo. Hệ thống sẽ tự thử lại."
               : "",
           );
@@ -233,7 +262,8 @@ export function RegistrationInboxLink() {
                 <Bell size={28} />
                 <strong>Chưa có thông báo mới</strong>
                 <p>
-                  Thông báo đăng ký hội viên và sự kiện sẽ xuất hiện tại đây.
+                  Thông báo hội viên, sự kiện và tin giao thương chờ duyệt sẽ
+                  xuất hiện tại đây.
                 </p>
               </div>
             )}
@@ -246,10 +276,12 @@ export function RegistrationInboxLink() {
                 }
                 href={
                   item.href +
-                  (item.eventId
-                    ? "?eventId=" + encodeURIComponent(item.eventId)
-                    : "?registrationId=" +
-                      encodeURIComponent(item.registrationId || ""))
+                  (item.tradePostId
+                    ? "?tradePostId=" + encodeURIComponent(item.tradePostId)
+                    : item.eventId
+                      ? "?eventId=" + encodeURIComponent(item.eventId)
+                      : "?registrationId=" +
+                        encodeURIComponent(item.registrationId || ""))
                 }
                 onClick={() => {
                   markRead(item.id);
@@ -303,7 +335,7 @@ export default function RegistrationInbox() {
     markRead,
     error,
   } = useContext(Context);
-  const items = allItems.filter((item) => !item.eventId);
+  const items = allItems.filter((item) => !item.eventId && !item.tradePostId);
   const labels = {
     pending: "Chờ duyệt",
     approved: "Đã duyệt",
@@ -331,10 +363,12 @@ export default function RegistrationInbox() {
             key={item.id}
             href={
               item.href +
-              (item.eventId
-                ? "?eventId=" + encodeURIComponent(item.eventId)
-                : "?registrationId=" +
-                  encodeURIComponent(item.registrationId || ""))
+              (item.tradePostId
+                ? "?tradePostId=" + encodeURIComponent(item.tradePostId)
+                : item.eventId
+                  ? "?eventId=" + encodeURIComponent(item.eventId)
+                  : "?registrationId=" +
+                    encodeURIComponent(item.registrationId || ""))
             }
             onClick={() => markRead(item.id)}
             style={{
@@ -367,4 +401,12 @@ export default function RegistrationInbox() {
 export function useEventInbox() {
   const context = useContext(Context);
   return { ...context, items: context.items.filter((item) => item.eventId) };
+}
+
+export function useTradeInbox() {
+  const context = useContext(Context);
+  return {
+    ...context,
+    items: context.items.filter((item) => item.tradePostId),
+  };
 }

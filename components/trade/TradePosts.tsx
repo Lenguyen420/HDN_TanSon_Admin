@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Image from "next/image";
+import { notify } from "@/lib/notify";
 import { tradeAdminRequest, tradeAdminMedia } from "@/services/api/tradeApi";
 import {
   tradeStatusLabels,
@@ -19,7 +20,7 @@ const localDate = (value?: string | null) =>
     : "";
 export default function TradePosts({ initialId }: { initialId?: string }) {
   const [search, setSearch] = useState(""),
-    [status, setStatus] = useState(""),
+    [status, setStatus] = useState("PENDING"),
     [page, setPage] = useState(1),
     [selected, setSelected] = useState<TradePost | null>(null),
     [id, setId] = useState(initialId),
@@ -32,12 +33,25 @@ export default function TradePosts({ initialId }: { initialId?: string }) {
     }),
     categories = useTradeAdmin<TradeCategory>("trade-post-categories"),
     task = useTradeTask();
+  const dialog = useRef<HTMLDialogElement>(null);
+  const detailVersion = useRef(0);
+  useEffect(() => {
+    if (selected && !dialog.current?.open) dialog.current?.showModal();
+  }, [selected]);
+  function closeDetail() {
+    detailVersion.current++;
+    setSelected(null);
+    setId(undefined);
+    setReason("");
+  }
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
+    const version = ++detailVersion.current;
     void tradeAdminRequest<TradePost>("trade-posts/" + id)
       .then((result) => {
-        if (!cancelled) setSelected(result.data);
+        if (!cancelled && version === detailVersion.current)
+          setSelected(result.data);
       })
       .catch(() => {
         if (!cancelled) setSelected(null);
@@ -46,22 +60,31 @@ export default function TradePosts({ initialId }: { initialId?: string }) {
       cancelled = true;
     };
   }, [id]);
-  async function action(action: string) {
-    if (!selected) return;
+  async function action(action: string, target = selected) {
+    if (!target) return;
+    detailVersion.current++;
     await task.run(async () => {
       const result = await tradeAdminRequest<TradePost>(
-        "trade-posts/" + selected.id + "/" + action,
+        "trade-posts/" + target.id + "/" + action,
         "PATCH",
         action === "reject"
           ? { reason }
           : action === "feature"
-            ? { featured: !selected.featured }
+            ? { featured: !target.featured }
             : {},
       );
-      setSelected({
-        ...result.data,
-        owner: result.data.owner || selected?.owner,
-      });
+      setSelected((current) =>
+        current?.id === target.id
+          ? { ...result.data, owner: result.data.owner || current.owner }
+          : current,
+      );
+      notify.success(
+        action === "approve"
+          ? "Đã duyệt và công bố tin giao thương."
+          : action === "reject"
+            ? "Đã gửi yêu cầu bổ sung cho người đăng."
+            : "Đã cập nhật tin giao thương.",
+      );
       setReason("");
       list.refresh();
     });
@@ -148,53 +171,155 @@ export default function TradePosts({ initialId }: { initialId?: string }) {
           {task.error || list.error}
         </p>
       )}
-      <div className="trade-grid">
-        <div className="trade-card">
-          <h2>Danh sách tin ({list.meta?.total || 0})</h2>
-          {list.loading ? (
-            <p>Đang tải tin giao thương…</p>
-          ) : !list.rows.length ? (
-            <p>Chưa có tin phù hợp.</p>
-          ) : (
-            <ul className="trade-items">
-              {list.rows.map((post) => (
-                <li key={post.id}>
-                  <button
-                    className="trade-link"
-                    onClick={() => {
-                      setSelected(post);
-                      setId(post.id);
-                    }}
-                  >
-                    <strong>{post.title}</strong>
-                  </button>
-                  <small>
-                    {post.owner?.displayName} · {tradeStatusLabels[post.status]}
-                    {post.featured ? " · Nổi bật" : ""}
-                  </small>
-                  <span>{tradePrice(post)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="trade-actions">
-            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-              Trang trước
-            </button>
-            <span>
-              Trang {page}/{list.meta?.totalPages || 1}
-            </span>
-            <button
-              disabled={page >= (list.meta?.totalPages || 1)}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Trang sau
-            </button>
-          </div>
+      <div className="trade-card trade-posts-table-card">
+        <h2>Duyệt tin giao thương ({list.meta?.total || 0})</h2>
+        <div className="trade-posts-table-scroll">
+          <table className="admin-table trade-posts-table">
+            <thead>
+              <tr>
+                <th scope="col">STT</th>
+                <th scope="col">Tin giao thương</th>
+                <th scope="col">Người đăng / Doanh nghiệp</th>
+                <th scope="col">Danh mục</th>
+                <th scope="col">Ngày gửi</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.loading ? (
+                <tr>
+                  <td colSpan={7}>Đang tải tin giao thương…</td>
+                </tr>
+              ) : !list.rows.length ? (
+                <tr>
+                  <td colSpan={7}>Chưa có tin phù hợp.</td>
+                </tr>
+              ) : (
+                list.rows.map((post, index) => (
+                  <tr key={post.id}>
+                    <td>{(page - 1) * 20 + index + 1}</td>
+                    <td>
+                      <button
+                        className="trade-link"
+                        onClick={() => {
+                          setSelected(post);
+                          setId(post.id);
+                          setReason("");
+                        }}
+                      >
+                        {post.title}
+                      </button>
+                      <small className="trade-table-subtitle">
+                        {tradePrice(post)}
+                        {post.featured ? " · Nổi bật" : ""}
+                      </small>
+                    </td>
+                    <td>
+                      <strong>
+                        {post.owner?.displayName || post.contactName}
+                      </strong>
+                      <small className="trade-table-subtitle">
+                        {post.contactPhone}
+                      </small>
+                    </td>
+                    <td>
+                      {categories.rows.find((c) => c.code === post.category)
+                        ?.name || post.category}
+                    </td>
+                    <td>
+                      {new Date(
+                        post.submittedAt || post.createdAt,
+                      ).toLocaleString("vi-VN")}
+                    </td>
+                    <td>
+                      <span
+                        className={
+                          "status-badge status-" +
+                          (post.status === "PENDING"
+                            ? "amber"
+                            : post.status === "PUBLISHED"
+                              ? "green"
+                              : post.status === "REJECTED"
+                                ? "red"
+                                : "gray")
+                        }
+                      >
+                        {tradeStatusLabels[post.status]}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="trade-row-actions">
+                        <button
+                          disabled={task.busy}
+                          onClick={() => {
+                            setSelected(post);
+                            setId(post.id);
+                            setReason("");
+                          }}
+                        >
+                          Xem chi tiết
+                        </button>
+                        {post.status === "PENDING" && (
+                          <>
+                            <button
+                              className="button button-primary"
+                              disabled={task.busy}
+                              onClick={() => void action("approve", post)}
+                            >
+                              Duyệt tin
+                            </button>
+                            <button
+                              disabled={task.busy}
+                              onClick={() => {
+                                setSelected(post);
+                                setId(post.id);
+                                setReason("");
+                              }}
+                            >
+                              Yêu cầu bổ sung
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-        {selected && (
+        <div className="trade-actions">
+          <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            Trang trước
+          </button>
+          <span>
+            Trang {page}/{list.meta?.totalPages || 1}
+          </span>
+          <button
+            disabled={page >= (list.meta?.totalPages || 1)}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Trang sau
+          </button>
+        </div>
+      </div>
+      {selected && (
+        <dialog
+          ref={dialog}
+          className="trade-post-dialog"
+          onCancel={closeDetail}
+        >
           <div className="trade-card">
-            <h2>{selected.title}</h2>
+            <div className="trade-dialog-heading">
+              <h2>{selected.title}</h2>
+              <button
+                onClick={closeDetail}
+                aria-label="Đóng chi tiết tin giao thương"
+              >
+                Đóng
+              </button>
+            </div>
             <p>
               {tradeStatusLabels[selected.status]} ·{" "}
               {selected.owner?.displayName}
@@ -412,8 +537,8 @@ export default function TradePosts({ initialId }: { initialId?: string }) {
               </fieldset>
             </form>
           </div>
-        )}
-      </div>
+        </dialog>
+      )}
     </section>
   );
 }

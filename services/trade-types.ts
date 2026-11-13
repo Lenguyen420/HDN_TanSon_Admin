@@ -67,6 +67,7 @@ export interface TradePost {
   reviewCount: number;
   rejectedReason?: string | null;
   publishedAt?: string | null;
+  submittedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   saved?: boolean;
@@ -180,6 +181,7 @@ export const businessTypeLabels: Record<string, string> = {
   GARDEN: "Nông nghiệp – sản phẩm địa phương",
 };
 export const tradeNoticeLabels: Record<string, string> = {
+  TRADE_POST_PENDING: "Tin đã gửi thành công, đang chờ Hội duyệt",
   TRADE_POST_SUBMITTED: "Có tin giao thương chờ duyệt",
   TRADE_POST_APPROVED: "Tin của doanh nghiệp đã được duyệt",
   TRADE_POST_NEW: "Cơ hội kết nối mới trong Hội",
