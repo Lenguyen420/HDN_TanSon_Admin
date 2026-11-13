@@ -5,10 +5,15 @@ type Context = { params: Promise<{ path: string[] }> };
 
 async function handle(request: NextRequest, context: Context) {
   const { path } = await context.params;
-  const isVideo =
+  const isLocalVideo =
+    path.length === 2 &&
+    path[0] === "introduction-videos" &&
+    /^[a-f0-9-]{36}\.(mp4|webm)$/.test(path[1]);
+  const isLegacyVideo =
     path.length === 2 &&
     path[0] === "introduction-videos" &&
     /^[a-f0-9-]{36}$/.test(path[1]);
+  const isVideo = isLegacyVideo || isLocalVideo;
   const isFile =
     path.length === 2 &&
     path[0] === "event-files" &&
@@ -23,7 +28,7 @@ async function handle(request: NextRequest, context: Context) {
     return json({ message: "Không tìm thấy ảnh." }, 404);
   try {
     const url = new URL(
-      isVideo
+      isLegacyVideo
         ? `/api/v1/public/introduction-videos/${path[1]}`
         : isFile
           ? `/api/v1/public/event-files/${path[1]}`
@@ -36,7 +41,7 @@ async function handle(request: NextRequest, context: Context) {
         isVideo && request.headers.has("range")
           ? { Range: request.headers.get("range")! }
           : undefined,
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(isVideo ? 300000 : 15000),
       // Image filenames are immutable UUIDs; binary ranges must stay separate.
       cache:
         !isVideo && !isFile && request.method === "GET"

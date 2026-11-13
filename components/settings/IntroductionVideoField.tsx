@@ -96,7 +96,7 @@ export default function IntroductionVideoField({
             }}
           />
           <small>
-            MP4 hoặc WebM, tối đa 100 MB. Video được tải lên khi bấm Lưu thông
+            MP4 hoặc WebM, tối đa 100 MiB. Video được tải lên khi bấm Lưu thông
             tin Hội.
           </small>
           {fileName && <small>{fileName}</small>}

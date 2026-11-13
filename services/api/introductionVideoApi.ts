@@ -1,8 +1,9 @@
 import axiosInstance from "./axiosConfig.ts";
-import { ApiError } from "./apiError.ts";
 
 export const managedVideoPattern =
   /^\/api\/v1\/public\/introduction-videos\/[a-f0-9-]{36}$/;
+export const localVideoPattern =
+  /^\/uploads\/introduction-videos\/[a-f0-9-]{36}\.(mp4|webm)$/;
 export function youtubeVideoUrl(value: string): string | null {
   try {
     const url = new URL(value.trim());
@@ -32,148 +33,63 @@ export function youtubeVideoUrl(value: string): string | null {
 export function validateIntroductionVideo(file: File) {
   if (!/\.(mp4|webm)$/i.test(file.name))
     throw new Error("Chọn video MP4 hoặc WebM.");
+  const type = /\.mp4$/i.test(file.name) ? "video/mp4" : "video/webm";
+  if (file.type && file.type !== type)
+    throw new Error("Định dạng video không khớp file MP4/WebM.");
   if (file.size < 12 || file.size > 100 * 1024 * 1024)
-    throw new Error("Video phải có dung lượng từ 12 byte đến 100 MB.");
+    throw new Error("Video phải có dung lượng từ 12 byte đến 100 MiB.");
 }
-type UploadSession = {
-  id: string;
-  chunkSize: number;
-  count: number;
-  completed: Set<number>;
-  created: number;
-  url?: string;
-};
 const pending = new WeakMap<File, Promise<string>>();
-const sessions = new WeakMap<File, UploadSession>();
+const uploaded = new WeakMap<File, string>();
 export function uploadIntroductionVideo(
   file: File,
   progress: (message: string) => void,
 ): Promise<string> {
   validateIntroductionVideo(file);
-  const cached = pending.get(file);
-  if (cached) return cached;
+  const completed = uploaded.get(file);
+  if (completed) return Promise.resolve(completed);
+  const active = pending.get(file);
+  if (active) return active;
   const task = (async () => {
-    let session = sessions.get(file);
-    let stage = "Khởi tạo tải video";
+    progress("Đang tải video lên hệ thống…");
+    const type = /\.mp4$/i.test(file.name) ? "video/mp4" : "video/webm";
+    const body = new FormData();
+    body.append(
+      "video",
+      file.type ? file : new File([file], file.name, { type }),
+    );
     try {
-      if (!session || Date.now() - session.created > 23 * 60 * 60 * 1000) {
-        progress("Đang chuẩn bị tải video…");
-        const started = (
-          await axiosInstance.post<{
-            data: { id: string; chunkSize: number; count: number };
-          }>("/association/introduction-videos", {
-            name: file.name,
-            size: file.size,
-            chunkSize: 256 * 1024,
-          })
-        ).data.data;
-        if (
-          !/^[a-f0-9-]{36}$/.test(started.id) ||
-          ![256 * 1024, 2 * 1024 * 1024].includes(started.chunkSize) ||
-          started.count !== Math.ceil(file.size / started.chunkSize)
-        )
-          throw new Error("Máy chủ trả về phiên tải không hợp lệ.");
-        session = { ...started, completed: new Set(), created: Date.now() };
-        sessions.set(file, session);
-      }
-      if (session.url) return session.url;
-      const active = session;
-      let next = 0;
-      const failure: { index: number; error: unknown }[] = [];
-      const report = () =>
-        progress(
-          "Đã tải video " +
-            active.completed.size +
-            "/" +
-            active.count +
-            " phần (" +
-            Math.round((active.completed.size / active.count) * 100) +
-            "%)…",
-        );
-      report();
-      async function worker() {
-        while (!failure.length) {
-          const index = next++;
-          if (index >= active.count) return;
-          if (active.completed.has(index)) continue;
-          try {
-            await axiosInstance.put(
-              "/association/introduction-videos/" +
-                active.id +
-                "/chunks/" +
-                index,
-              file.slice(
-                index * active.chunkSize,
-                Math.min(file.size, (index + 1) * active.chunkSize),
-              ),
-              {
-                headers: { "Content-Type": "application/octet-stream" },
-                timeout: 60000,
-              },
-            );
-            active.completed.add(index);
-            report();
-          } catch (error) {
-            failure.push({ index, error });
-          }
-        }
-      }
-      // Drain in-flight requests before retrying or deleting the session.
-      // Acknowledged parts beyond a failed part are retained for the next save.
-      await Promise.all(
-        Array.from({ length: Math.min(3, active.count) }, () => worker()),
-      );
-      if (failure.length) {
-        // A permanent error must not be hidden by another worker's timeout.
-        const permanent = failure.find(
-          ({ error }) =>
-            !(error instanceof ApiError) ||
-            !([0, 429].includes(error.statusCode) || error.statusCode >= 500),
-        );
-        const failed = permanent ?? failure[0];
-        stage = "Tải video phần " + (failed.index + 1) + "/" + active.count;
-        throw failed.error;
-      }
-      stage = "Hoàn tất video";
-      progress("Đang hoàn tất video trên hệ thống…");
       const result = (
         await axiosInstance.post<{ data: { url: string } }>(
-          "/association/introduction-videos/" + session.id + "/complete",
-          {},
+          "/association/introduction-videos/upload",
+          body,
+          {
+            // Let the browser generate the multipart boundary.
+            headers: { "Content-Type": false },
+            timeout: 300000,
+            onUploadProgress: ({ loaded, total }) => {
+              if (total)
+                progress(
+                  "Đang tải video " +
+                    Math.min(100, Math.round((loaded / total) * 100)) +
+                    "%…",
+                );
+            },
+          },
         )
       ).data.data;
-      if (!managedVideoPattern.test(result.url))
+      if (!localVideoPattern.test(result.url))
         throw new Error("Đường dẫn video không hợp lệ.");
-      session.url = result.url;
-      progress("Đã tải xong video.");
+      uploaded.set(file, result.url);
+      progress("Đã lưu video.");
       return result.url;
     } catch (error) {
-      const recoverable =
-        error instanceof ApiError &&
-        (error.statusCode === 0 ||
-          error.statusCode === 429 ||
-          error.statusCode >= 500);
-      if (!recoverable && session) {
-        sessions.delete(file);
-        // Cleanup must not hold the form in a loading state after the original failure.
-        void axiosInstance
-          .delete("/association/introduction-videos/" + session.id, {
-            timeout: 5000,
-          })
-          .catch(() => undefined);
-      }
       throw new Error(
-        stage +
-          ": " +
-          (error instanceof Error ? error.message : "Không thể tải video.") +
-          (recoverable && session
-            ? " Bấm Lưu để tiếp tục phần chưa tải; giữ nguyên file đã chọn."
-            : ""),
+        "Lưu video: " +
+          (error instanceof Error ? error.message : "Không thể tải video."),
       );
     }
-  })().finally(() => {
-    pending.delete(file);
-  });
+  })().finally(() => pending.delete(file));
   pending.set(file, task);
   return task;
 }

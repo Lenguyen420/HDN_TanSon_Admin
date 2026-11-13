@@ -18,7 +18,7 @@ export async function backendRequest(path: string, options: RequestInit = {}) {
   return fetch(backendUrl(path), {
     ...options,
     cache: "no-store",
-    signal: AbortSignal.timeout(45000),
+    signal: options.signal ?? AbortSignal.timeout(45000),
     headers: { Accept: "application/json", ...options.headers },
   });
 }

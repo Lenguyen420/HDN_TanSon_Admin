@@ -8,6 +8,8 @@ import {
 } from "@/lib/backend";
 import { resolveAssociationRoute } from "@/lib/association-route";
 
+export const maxDuration = 300;
+
 type Context = { params: Promise<{ path: string[] }> };
 
 async function handle(request: NextRequest, context: Context) {
@@ -30,6 +32,48 @@ async function handle(request: NextRequest, context: Context) {
     );
 
   try {
+    if (path[0] === "introduction-videos" && path[1] === "upload") {
+      const contentType = request.headers.get("content-type") || "";
+      if (
+        !/^multipart\/form-data\s*;.*boundary=/i.test(contentType) ||
+        !request.body
+      )
+        return json({ message: "Vui lòng gửi file video bằng FormData." }, 400);
+      const maxBytes = 101 * 1024 * 1024;
+      if (Number(request.headers.get("content-length")) > maxBytes)
+        return json({ message: "Video vượt quá dung lượng cho phép." }, 413);
+      let size = 0;
+      let exceeded = false;
+      const body = request.body.pipeThrough(
+        new TransformStream<Uint8Array, Uint8Array>({
+          transform(chunk, controller) {
+            size += chunk.byteLength;
+            if (size > maxBytes) {
+              exceeded = true;
+              throw new Error("Upload limit exceeded");
+            }
+            controller.enqueue(chunk);
+          },
+        }),
+      );
+      const options: RequestInit & { duplex: "half" } = {
+        method: "POST",
+        duplex: "half",
+        body,
+        headers: {
+          Authorization: "Bearer " + token,
+          "Content-Type": contentType,
+        },
+        signal: AbortSignal.timeout(300000),
+      };
+      try {
+        return await passResponse(await backendRequest(route.path, options));
+      } catch (error) {
+        if (exceeded)
+          return json({ message: "Video vượt quá dung lượng cho phép." }, 413);
+        throw error;
+      }
+    }
     if (
       path[0] === "event-files" ||
       (path[0] === "introduction-videos" && path[2] === "chunks")

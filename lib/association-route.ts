@@ -32,6 +32,7 @@ export function resolveAssociationRoute(
   let allowed: string[];
   if (collection === "introduction-videos") {
     if (segments.length === 1) allowed = ["POST"];
+    else if (segments.length === 2 && id === "upload") allowed = ["POST"];
     else if (segments.length === 2) allowed = ["DELETE"];
     else if (segments.length === 3 && action === "complete") allowed = ["POST"];
     else if (

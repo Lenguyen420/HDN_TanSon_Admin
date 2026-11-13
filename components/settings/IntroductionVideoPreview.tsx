@@ -1,6 +1,7 @@
 "use client";
 import {
   managedVideoPattern,
+  localVideoPattern,
   videoPreviewUrl,
   youtubeVideoUrl,
 } from "@/services/api/introductionVideoApi";
@@ -17,6 +18,7 @@ export default function IntroductionVideoPreview({
   if (
     !youtube &&
     !managedVideoPattern.test(value) &&
+    !localVideoPattern.test(value) &&
     !(local && value.startsWith("blob:"))
   ) {
     try {

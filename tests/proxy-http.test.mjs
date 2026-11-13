@@ -17,6 +17,8 @@ test(
       37, 80, 68, 70, 45, 49, 46, 52, 10, 0, 255, 128,
     ]);
     const fileId = "00000000-0000-4000-8000-000000000000";
+    const uploadBytes = Buffer.alloc(12 * 1024 * 1024, 9);
+    uploadBytes.write("ftyp", 4);
     const backend = createServer(async (req, res) => {
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
@@ -67,6 +69,49 @@ test(
           "Content-Length": String(fileBytes.length),
         });
         return res.end(fileBytes);
+      }
+      if (req.url === "/api/v1/admin/introduction-videos/upload") {
+        assert.equal(req.headers.authorization, "Bearer test-access");
+        assert.match(
+          req.headers["content-type"],
+          /^multipart\/form-data; boundary=/,
+        );
+        const form = await new Response(bytes, {
+          headers: { "Content-Type": req.headers["content-type"] },
+        }).formData();
+        const video = form.get("video");
+        assert.equal(video.name, "intro.mp4");
+        assert.deepEqual(Buffer.from(await video.arrayBuffer()), uploadBytes);
+        res.writeHead(201, { "Content-Type": "application/json" });
+        return res.end(
+          JSON.stringify({
+            data: { url: "/uploads/introduction-videos/" + fileId + ".mp4" },
+          }),
+        );
+      }
+      if (req.url === "/uploads/introduction-videos/" + fileId + ".mp4") {
+        if (req.headers.range === "bytes=999-") {
+          res.writeHead(416, {
+            "Content-Range": "bytes */" + fileBytes.length,
+          });
+          return res.end();
+        }
+        const ranged = req.headers.range === "bytes=2-5";
+        res.writeHead(ranged ? 206 : 200, {
+          "Content-Type": "video/mp4",
+          "Accept-Ranges": "bytes",
+          "Content-Length": String(ranged ? 4 : fileBytes.length),
+          ...(ranged
+            ? { "Content-Range": "bytes 2-5/" + fileBytes.length }
+            : {}),
+        });
+        return res.end(
+          req.method === "HEAD"
+            ? undefined
+            : ranged
+              ? fileBytes.subarray(2, 6)
+              : fileBytes,
+        );
       }
       const text = bytes.toString();
       received.push({
@@ -251,6 +296,52 @@ test(
       assert.deepEqual(
         Buffer.from(await videoRange.arrayBuffer()),
         fileBytes.subarray(2, 6),
+      );
+      const uploadForm = new FormData();
+      uploadForm.append(
+        "video",
+        new Blob([uploadBytes], { type: "video/mp4" }),
+        "intro.mp4",
+      );
+      const localUpload = await fetch(
+        base + "/api/association/introduction-videos/upload",
+        {
+          method: "POST",
+          headers: { Cookie: "admin_access_token=test-access" },
+          body: uploadForm,
+        },
+      );
+      assert.equal(localUpload.status, 201);
+      const localUrl = (await localUpload.json()).data.url;
+      assert.equal(localUrl, "/uploads/introduction-videos/" + fileId + ".mp4");
+      assert.equal(
+        (await call("/api/association/introduction-videos/upload", "POST", {}))
+          .status,
+        400,
+      );
+      const localRange = await fetch(base + localUrl, {
+        headers: { Range: "bytes=2-5" },
+      });
+      assert.equal(localRange.status, 206);
+      assert.equal(
+        localRange.headers.get("content-range"),
+        "bytes 2-5/" + fileBytes.length,
+      );
+      assert.deepEqual(
+        Buffer.from(await localRange.arrayBuffer()),
+        fileBytes.subarray(2, 6),
+      );
+      const localHead = await fetch(base + localUrl, { method: "HEAD" });
+      assert.equal(localHead.status, 200);
+      assert.equal(
+        localHead.headers.get("content-length"),
+        String(fileBytes.length),
+      );
+      assert.equal((await localHead.arrayBuffer()).byteLength, 0);
+      assert.equal(
+        (await fetch(base + localUrl, { headers: { Range: "bytes=999-" } }))
+          .status,
+        416,
       );
       const slowSave = await call("/api/association/settings", "PUT", {
         name: "Test Hội",
