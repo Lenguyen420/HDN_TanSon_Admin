@@ -123,19 +123,19 @@ async function handle(request: NextRequest, context: Context) {
         }),
       );
     }
-    return await passResponse(
-      await backendRequest(route.path + request.nextUrl.search, {
-        method: request.method,
-        headers: {
-          Authorization: "Bearer " + token,
-          "Content-Type": "application/json",
-        },
-        body: request.method === "GET" ? undefined : await request.text(),
-      }),
-    );
+    const response = await backendRequest(route.path + request.nextUrl.search, {
+      method: request.method,
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      body: request.method === "GET" ? undefined : await request.text(),
+    });
+    if (response.status === 204) return new Response(null, { status: 204 });
+    return await passResponse(response);
   } catch (error) {
     return unavailable(error);
   }
 }
 
-export { handle as GET, handle as POST, handle as PUT, handle as DELETE };
+export { handle as GET, handle as POST, handle as PUT, handle as PATCH, handle as DELETE };

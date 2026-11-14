@@ -11,6 +11,7 @@ import {
   Images,
   Settings2,
   LayoutDashboard,
+  MapPin,
 } from "lucide-react";
 import type { Collection } from "@/services/association-store";
 
@@ -423,6 +424,12 @@ export const navigation = [
     label: "Giao thương",
     href: "/admin/trade",
     icon: Handshake,
+    group: "Nội dung & hoạt động",
+  },
+  {
+    label: "LocalGo",
+    href: "/admin/localgo",
+    icon: MapPin,
     group: "Nội dung & hoạt động",
   },
   {

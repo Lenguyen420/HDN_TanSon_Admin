@@ -26,6 +26,11 @@ test(
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const bytes = Buffer.concat(chunks);
+      if (req.url === "/api/v1/localgo/places/deleted-place" && req.method === "DELETE") {
+        assert.equal(req.headers.authorization, "Bearer test-access");
+        res.writeHead(204);
+        return res.end();
+      }
       if (req.url === `/api/v1/admin/introduction-videos/${fileId}/chunks/0`) {
         assert.equal(req.method, "PUT");
         assert.equal(req.headers.authorization, "Bearer test-access");
@@ -228,6 +233,27 @@ test(
         );
         assert.equal(received.at(-1).auth, "Bearer test-access");
       }
+      for (const [method, path, body, backendPath] of [
+        ["GET", "/localgo/categories", undefined, "/localgo/categories"],
+        ["GET", "/localgo/places?category=an-uong&page=1&limit=20", undefined, "/admin/localgo/places?category=an-uong&page=1&limit=20"],
+        ["GET", "/localgo/places/id", undefined, "/admin/localgo/places/id"],
+        ["POST", "/localgo/places", { name: "Địa điểm" }, "/localgo/places"],
+        ["PATCH", "/localgo/places/id", { location: { type: "Point", coordinates: [106.63, 10.815] } }, "/localgo/places/id"],
+        ["PATCH", "/localgo/places/id/hide", { reason: "Tạm ngưng" }, "/admin/localgo/places/id/hide"],
+        ["PATCH", "/localgo/places/id/visibility", { isVisible: true }, "/localgo/places/id/visibility"],
+      ]) {
+        assert.equal((await call("/api/association" + path, method, body)).status, 200);
+        assert.equal(received.at(-1).path, "/api/v1" + backendPath);
+        assert.equal(received.at(-1).method, method);
+        assert.equal(received.at(-1).auth, "Bearer test-access");
+        assert.deepEqual(received.at(-1).body, body);
+      }
+      const deleted = await call("/api/association/localgo/places/deleted-place", "DELETE");
+      assert.equal(deleted.status, 204);
+      assert.equal(await deleted.text(), "");
+      assert.equal((await call("/api/association/localgo/categories", "POST", {})).status, 405);
+      assert.equal((await call("/api/association/localgo/places/id", "PATCH", {}, { Origin: "https://untrusted.example" })).status, 403);
+      assert.equal((await call("/api/association/localgo/places/id", "PATCH", {}, { Cookie: "" })).status, 401);
       const banner = {
         image: "uploads/banners/existing.webp",
         alt: "Updated",

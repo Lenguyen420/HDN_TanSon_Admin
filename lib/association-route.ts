@@ -21,6 +21,27 @@ export function resolveAssociationRoute(
   method: string,
   segments: string[],
 ): RouteResult {
+  // LocalGo uses admin reads and shared authenticated writes in Backend.
+  if (segments[0] === "localgo") {
+    if (segments.some((part) => !/^[a-zA-Z0-9_-]{1,100}$/.test(part)))
+      return { status: 404 };
+    const [, resource, id, action] = segments;
+    let methods: string[];
+    let prefix = "/localgo/";
+    if (resource === "categories" && segments.length === 2) methods = ["GET"];
+    else if (resource === "places" && segments.length === 2) {
+      methods = ["GET", "POST"];
+      if (method === "GET") prefix = "/admin/localgo/";
+    } else if (resource === "places" && id && segments.length === 3) {
+      methods = ["GET", "PATCH", "DELETE"];
+      if (method === "GET") prefix = "/admin/localgo/";
+    } else if (resource === "places" && id && segments.length === 4 && ["hide", "visibility"].includes(action)) {
+      methods = ["PATCH"];
+      if (action === "hide") prefix = "/admin/localgo/";
+    } else return { status: 404 };
+    if (!methods.includes(method)) return { status: 405 };
+    return { path: prefix + segments.slice(1).map(encodeURIComponent).join("/") };
+  }
   const [collection, id, action, index] = segments;
   if (
     !collections.has(collection) ||

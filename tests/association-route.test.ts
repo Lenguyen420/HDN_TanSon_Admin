@@ -2,6 +2,33 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { resolveAssociationRoute } from "../lib/association-route.ts";
 
+test("LocalGo reuses the proxy with exact backend reads, writes and visibility actions", () => {
+  const cases = [
+    ["GET", ["localgo", "categories"], "/localgo/categories"],
+    ["GET", ["localgo", "places"], "/admin/localgo/places"],
+    ["GET", ["localgo", "places", "place-1"], "/admin/localgo/places/place-1"],
+    ["POST", ["localgo", "places"], "/localgo/places"],
+    ["PATCH", ["localgo", "places", "place-1"], "/localgo/places/place-1"],
+    ["DELETE", ["localgo", "places", "place-1"], "/localgo/places/place-1"],
+    ["PATCH", ["localgo", "places", "place-1", "hide"], "/admin/localgo/places/place-1/hide"],
+    ["PATCH", ["localgo", "places", "place-1", "visibility"], "/localgo/places/place-1/visibility"],
+  ] as const;
+  for (const [method, segments, path] of cases)
+    assert.deepEqual(resolveAssociationRoute(method, [...segments]), { path });
+  for (const segments of [
+    ["localgo"], ["localgo", "categories", "an-uong"],
+    ["localgo", "places", ".."], ["localgo", "places", "a/b"],
+    ["localgo", "places", "id", "approve"],
+    ["localgo", "places", "id", "hide", "extra"],
+  ]) assert.equal(resolveAssociationRoute("GET", segments).status, 404);
+  for (const [method, segments] of [
+    ["POST", ["localgo", "categories"]],
+    ["DELETE", ["localgo", "places"]],
+    ["PUT", ["localgo", "places", "id"]],
+    ["GET", ["localgo", "places", "id", "hide"]],
+  ] as const) assert.equal(resolveAssociationRoute(method, [...segments]).status, 405);
+});
+
 test("shared route preserves collection CRUD URLs and registration decisions", () => {
   for (const collection of [
     "members",
