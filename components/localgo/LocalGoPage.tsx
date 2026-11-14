@@ -7,6 +7,7 @@ import MemberAvatar from "@/components/shared/association/MemberAvatar";
 import { localGoApi } from "@/services/api/localGoApi";
 import { notify } from "@/lib/notify";
 import PlaceDialog from "./PlaceDialog";
+import CategoryDialog from "./CategoryDialog";
 import type { LocalGoCategory, LocalGoMember, LocalGoPlace } from "./types";
 import styles from "./localgo.module.css";
 
@@ -95,6 +96,7 @@ export default function LocalGoPage() {
   const [categoryError, setCategoryError] = useState("");
   const [revision, setRevision] = useState(0);
   const [editing, setEditing] = useState<LocalGoPlace | null | undefined>();
+  const [categoryDialog, setCategoryDialog] = useState<{ category: LocalGoCategory | null; deleting?: boolean }>();
   const [memberId, setMemberId] = useState<string>();
   const [action, setAction] = useState<{ place: LocalGoPlace; kind: "visibility" | "delete" }>();
   const [opening, setOpening] = useState(false);
@@ -136,12 +138,12 @@ export default function LocalGoPage() {
   return <AppShell activeHref="/admin/localgo"><div className={styles.workspace}>
     <header className={styles.header}><div><span className="eyebrow">QUẢN LÝ NỘI DUNG</span><h1>LocalGo</h1><p>Quản lý địa điểm và kết nối cộng đồng hội viên.</p></div>
       {tab === "places" && <button className="button button-primary" disabled={categoriesLoading || !!categoryError || !categories.length || opening} onClick={() => setEditing(null)}><Plus size={17} />Thêm địa điểm</button>}
+      {tab === "categories" && <button className="button button-primary" disabled={categoriesLoading || !!categoryError} onClick={() => setCategoryDialog({ category: null })}><Plus size={17} />Thêm danh mục</button>}
     </header>
     <nav className={styles.tabs} aria-label="Quản lý LocalGo">{([["places", "Địa điểm"], ["categories", "Danh mục"]] as const).map(([id, label]) => <button key={id} className={`button ${tab === id ? "button-primary" : "button-secondary"}`} aria-pressed={tab === id} onClick={() => setTab(id)}>{label}</button>)}</nav>
     {categoryError && <div role="alert" className="error-message">{categoryError} <button className="button button-secondary" onClick={refresh}>Thử lại</button></div>}
     {tab === "categories" ? <section className={styles.panel} aria-label="Danh mục LocalGo">
-      <p className={styles.message}>Danh mục hiện do hệ thống quy định. Chưa hỗ trợ thêm, sửa hoặc xóa danh mục.</p>
-      {categoriesLoading ? <p role="status" className={styles.message}>Đang tải danh mục…</p> : !categoryError && <div className={styles.table}><table><thead><tr><th>Mã danh mục</th><th>Tên danh mục</th></tr></thead><tbody>{categories.map((item) => <tr key={item.code}><td>{item.code}</td><td>{item.name}</td></tr>)}</tbody></table>{!categories.length && <p className={styles.message}>Chưa có danh mục.</p>}</div>}
+      {categoriesLoading ? <p role="status" className={styles.message}>Đang tải danh mục…</p> : !categoryError && <div className={styles.table}><table><thead><tr><th>Mã danh mục</th><th>Tên danh mục</th><th>Thao tác</th></tr></thead><tbody>{categories.map((item) => <tr key={item.code}><td>{item.code}</td><td>{item.name}</td><td><div className={styles.actions}><button className="icon-button" aria-label={`Sửa danh mục ${item.name}`} onClick={() => setCategoryDialog({ category: item })}><Pencil size={17} /></button><button className="icon-button" aria-label={`Xóa danh mục ${item.name}`} onClick={() => setCategoryDialog({ category: item, deleting: true })}><Trash2 size={17} /></button></div></td></tr>)}</tbody></table>{!categories.length && <p className={styles.message}>Chưa có danh mục.</p>}</div>}
     </section> : <section className={styles.panel} aria-label="Danh sách địa điểm">
       <form className={styles.toolbar} onSubmit={(event) => { event.preventDefault(); setQuery(search.trim()); setPage(1); }}>
         <input aria-label="Tìm kiếm địa điểm" placeholder="Tên, địa chỉ hoặc mô tả địa điểm…" maxLength={150} value={search} onChange={(event) => setSearch(event.target.value)} />
@@ -164,5 +166,6 @@ export default function LocalGoPage() {
     {editing !== undefined && <PlaceDialog place={editing} categories={categories} onClose={() => setEditing(undefined)} onSaved={refresh} />}
     {memberId && <MemberDialog key={memberId} id={memberId} onClose={() => setMemberId(undefined)} />}
     {action && <ActionDialog place={action.place} action={action.kind} onClose={() => setAction(undefined)} onSaved={refresh} />}
+    {categoryDialog && <CategoryDialog category={categoryDialog.category} deleting={categoryDialog.deleting} onClose={() => setCategoryDialog(undefined)} onSaved={(deletedCode) => { if (deletedCode && deletedCode === category) { setCategory(""); setPage(1); } refresh(); }} />}
   </div></AppShell>;
 }

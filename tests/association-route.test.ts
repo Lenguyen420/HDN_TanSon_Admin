@@ -5,6 +5,9 @@ import { resolveAssociationRoute } from "../lib/association-route.ts";
 test("LocalGo reuses the proxy with exact backend reads, writes and visibility actions", () => {
   const cases = [
     ["GET", ["localgo", "categories"], "/localgo/categories"],
+    ["POST", ["localgo", "categories"], "/admin/localgo/categories"],
+    ["PATCH", ["localgo", "categories", "the-thao"], "/admin/localgo/categories/the-thao"],
+    ["DELETE", ["localgo", "categories", "the-thao"], "/admin/localgo/categories/the-thao"],
     ["GET", ["localgo", "places"], "/admin/localgo/places"],
     ["GET", ["localgo", "places", "place-1"], "/admin/localgo/places/place-1"],
     ["POST", ["localgo", "places"], "/localgo/places"],
@@ -16,13 +19,14 @@ test("LocalGo reuses the proxy with exact backend reads, writes and visibility a
   for (const [method, segments, path] of cases)
     assert.deepEqual(resolveAssociationRoute(method, [...segments]), { path });
   for (const segments of [
-    ["localgo"], ["localgo", "categories", "an-uong"],
+    ["localgo"], ["localgo", "categories", "an-uong", "extra"],
     ["localgo", "places", ".."], ["localgo", "places", "a/b"],
     ["localgo", "places", "id", "approve"],
     ["localgo", "places", "id", "hide", "extra"],
   ]) assert.equal(resolveAssociationRoute("GET", segments).status, 404);
   for (const [method, segments] of [
-    ["POST", ["localgo", "categories"]],
+    ["PUT", ["localgo", "categories"]],
+    ["GET", ["localgo", "categories", "the-thao"]],
     ["DELETE", ["localgo", "places"]],
     ["PUT", ["localgo", "places", "id"]],
     ["GET", ["localgo", "places", "id", "hide"]],

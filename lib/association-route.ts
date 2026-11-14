@@ -28,8 +28,13 @@ export function resolveAssociationRoute(
     const [, resource, id, action] = segments;
     let methods: string[];
     let prefix = "/localgo/";
-    if (resource === "categories" && segments.length === 2) methods = ["GET"];
-    else if (resource === "places" && segments.length === 2) {
+    if (resource === "categories" && segments.length === 2) {
+      methods = ["GET", "POST"];
+      if (method === "POST") prefix = "/admin/localgo/";
+    } else if (resource === "categories" && id && segments.length === 3) {
+      methods = ["PATCH", "DELETE"];
+      prefix = "/admin/localgo/";
+    } else if (resource === "places" && segments.length === 2) {
       methods = ["GET", "POST"];
       if (method === "GET") prefix = "/admin/localgo/";
     } else if (resource === "places" && id && segments.length === 3) {

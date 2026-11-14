@@ -10,6 +10,13 @@ export const localGoApi = {
   async categories(signal?: AbortSignal) {
     return (await api.get<{ data: LocalGoCategory[] }>(endpoint + "/categories", { signal })).data.data;
   },
+  async saveCategory(code: string | null, data: LocalGoCategory) {
+    if (code) await api.patch(endpoint + "/categories/" + encodeURIComponent(code), { name: data.name });
+    else await api.post(endpoint + "/categories", data);
+  },
+  async removeCategory(code: string) {
+    await api.delete(endpoint + "/categories/" + encodeURIComponent(code));
+  },
   async get(id: string) {
     return (await api.get<{ data: LocalGoPlace }>(placeUrl(id))).data.data;
   },

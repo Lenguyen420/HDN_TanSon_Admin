@@ -26,7 +26,7 @@ test(
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const bytes = Buffer.concat(chunks);
-      if (req.url === "/api/v1/localgo/places/deleted-place" && req.method === "DELETE") {
+      if (["/api/v1/localgo/places/deleted-place", "/api/v1/admin/localgo/categories/deleted-category"].includes(req.url) && req.method === "DELETE") {
         assert.equal(req.headers.authorization, "Bearer test-access");
         res.writeHead(204);
         return res.end();
@@ -235,6 +235,8 @@ test(
       }
       for (const [method, path, body, backendPath] of [
         ["GET", "/localgo/categories", undefined, "/localgo/categories"],
+        ["POST", "/localgo/categories", { code: "the-thao", name: "Thể thao" }, "/admin/localgo/categories"],
+        ["PATCH", "/localgo/categories/the-thao", { name: "Thể thao mới" }, "/admin/localgo/categories/the-thao"],
         ["GET", "/localgo/places?category=an-uong&page=1&limit=20", undefined, "/admin/localgo/places?category=an-uong&page=1&limit=20"],
         ["GET", "/localgo/places/id", undefined, "/admin/localgo/places/id"],
         ["POST", "/localgo/places", { name: "Địa điểm" }, "/localgo/places"],
@@ -251,7 +253,12 @@ test(
       const deleted = await call("/api/association/localgo/places/deleted-place", "DELETE");
       assert.equal(deleted.status, 204);
       assert.equal(await deleted.text(), "");
-      assert.equal((await call("/api/association/localgo/categories", "POST", {})).status, 405);
+      const deletedCategory = await call("/api/association/localgo/categories/deleted-category", "DELETE");
+      assert.equal(deletedCategory.status, 204);
+      assert.equal(await deletedCategory.text(), "");
+      assert.equal((await call("/api/association/localgo/categories", "PUT", {})).status, 405);
+      assert.equal((await call("/api/association/localgo/categories", "POST", {}, { Cookie: "" })).status, 401);
+      assert.equal((await call("/api/association/localgo/categories/the-thao", "DELETE", undefined, { Origin: "https://untrusted.example" })).status, 403);
       assert.equal((await call("/api/association/localgo/places/id", "PATCH", {}, { Origin: "https://untrusted.example" })).status, 403);
       assert.equal((await call("/api/association/localgo/places/id", "PATCH", {}, { Cookie: "" })).status, 401);
       const banner = {
