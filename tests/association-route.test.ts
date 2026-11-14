@@ -4,6 +4,7 @@ import { resolveAssociationRoute } from "../lib/association-route.ts";
 
 test("LocalGo reuses the proxy with exact backend reads, writes and visibility actions", () => {
   const cases = [
+    ["POST", ["localgo", "resolve-map"], "/admin/localgo/resolve-map"],
     ["GET", ["localgo", "categories"], "/localgo/categories"],
     ["POST", ["localgo", "categories"], "/admin/localgo/categories"],
     ["PATCH", ["localgo", "categories", "the-thao"], "/admin/localgo/categories/the-thao"],
@@ -27,6 +28,7 @@ test("LocalGo reuses the proxy with exact backend reads, writes and visibility a
   for (const [method, segments] of [
     ["PUT", ["localgo", "categories"]],
     ["GET", ["localgo", "categories", "the-thao"]],
+    ["GET", ["localgo", "resolve-map"]],
     ["DELETE", ["localgo", "places"]],
     ["PUT", ["localgo", "places", "id"]],
     ["GET", ["localgo", "places", "id", "hide"]],

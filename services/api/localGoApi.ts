@@ -1,9 +1,12 @@
 import api from "./axiosConfig.ts";
-import type { LocalGoCategory, LocalGoMember, LocalGoPlace, PlaceInput } from "../../components/localgo/types.ts";
+import type { Coordinates, LocalGoCategory, LocalGoMember, LocalGoPlace, PlaceInput } from "../../components/localgo/types.ts";
 
 const endpoint = "/association/localgo";
 const placeUrl = (id: string) => `${endpoint}/places/${encodeURIComponent(id)}`;
 export const localGoApi = {
+  async resolveMap(url: string, signal?: AbortSignal) {
+    return (await api.post<{ data: Coordinates }>(endpoint + "/resolve-map", { url }, { signal })).data.data;
+  },
   async listPlaces(params: { page: number; limit: number; search?: string; category?: string }, signal?: AbortSignal) {
     return (await api.get<{ data: LocalGoPlace[]; pagination: { page: number; limit: number; total: number } }>(endpoint + "/places", { params, signal })).data;
   },

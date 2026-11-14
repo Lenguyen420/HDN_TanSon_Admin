@@ -83,14 +83,14 @@ export default function CoordinatePicker({ value, onChange, disabled = false }: 
       </div>
       <a className={styles.attribution} href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
     </div>
-    {tileError && <p role="status">Không tải được bản đồ. Bạn vẫn có thể nhập tọa độ bên dưới.</p>}
-    <div className="form-grid">
-      <label className="form-field"><span>Vĩ độ *</span><input type="number" name="latitude" required min={-90} max={90} step="any" disabled={disabled} value={value?.latitude ?? ""} onChange={(event) => {
+    {tileError && <p role="status">Không tải được nền bản đồ. Vị trí từ link Google Maps vẫn được giữ lại.</p>}
+    <details><summary>Nhập tọa độ thủ công</summary><div className="form-grid">
+      <label className="form-field"><span>Vĩ độ</span><input type="number" name="latitude" min={-90} max={90} step="any" disabled={disabled} value={value?.latitude ?? ""} onChange={(event) => {
         if (event.target.value !== "" && Number.isFinite(event.target.valueAsNumber)) onChange({ latitude: event.target.valueAsNumber, longitude: value?.longitude ?? center.longitude });
       }} /></label>
-      <label className="form-field"><span>Kinh độ *</span><input type="number" name="longitude" required min={-180} max={180} step="any" disabled={disabled} value={value?.longitude ?? ""} onChange={(event) => {
+      <label className="form-field"><span>Kinh độ</span><input type="number" name="longitude" min={-180} max={180} step="any" disabled={disabled} value={value?.longitude ?? ""} onChange={(event) => {
         if (event.target.value !== "" && Number.isFinite(event.target.valueAsNumber)) onChange({ longitude: event.target.valueAsNumber, latitude: value?.latitude ?? center.latitude });
       }} /></label>
-    </div>
+    </div></details>
   </div>;
 }

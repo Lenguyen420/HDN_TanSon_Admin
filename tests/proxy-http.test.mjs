@@ -26,6 +26,10 @@ test(
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const bytes = Buffer.concat(chunks);
+      if (req.url === "/uploads/localgo/00000000-0000-4000-8000-000000000003.png") {
+        res.writeHead(200, { "Content-Type": "image/png" });
+        return res.end(licenseBytes);
+      }
       if (["/api/v1/localgo/places/deleted-place", "/api/v1/admin/localgo/categories/deleted-category"].includes(req.url) && req.method === "DELETE") {
         assert.equal(req.headers.authorization, "Bearer test-access");
         res.writeHead(204);
@@ -234,6 +238,7 @@ test(
         assert.equal(received.at(-1).auth, "Bearer test-access");
       }
       for (const [method, path, body, backendPath] of [
+        ["POST", "/localgo/resolve-map", { url: "https://www.google.com/maps?q=10.815,106.63" }, "/admin/localgo/resolve-map"],
         ["GET", "/localgo/categories", undefined, "/localgo/categories"],
         ["POST", "/localgo/categories", { code: "the-thao", name: "Thể thao" }, "/admin/localgo/categories"],
         ["PATCH", "/localgo/categories/the-thao", { name: "Thể thao mới" }, "/admin/localgo/categories/the-thao"],
@@ -333,6 +338,10 @@ test(
         1,
         "immutable images are reused from the admin server cache",
       );
+      const localGoImage = await fetch(base + "/uploads/localgo/00000000-0000-4000-8000-000000000003.png");
+      assert.equal(localGoImage.status, 200);
+      assert.equal(localGoImage.headers.get("content-type"), "image/png");
+      assert.deepEqual(Buffer.from(await localGoImage.arrayBuffer()), licenseBytes);
       const videoRange = await fetch(
         base + `/uploads/introduction-videos/${fileId}`,
         { headers: { Range: "bytes=2-5" } },

@@ -1,14 +1,9 @@
 .trade-workspace {
-  max-width: 1440px;
-  margin: auto;
-  padding: 24px;
-  color: #16324f;
+  min-width: 0;
+  width: 100%;
+  color: inherit;
 }
-.trade-workspace h1 {
-  font-size: 28px;
-  margin: 8px 0;
-}
-.trade-workspace h2 {
+.trade-workspace .trade-card > h2 {
   font-size: 18px;
   margin: 0 0 12px;
 }
@@ -24,7 +19,7 @@
   gap: 10px;
   margin: 18px 0;
 }
-.trade-workspace button {
+.trade-workspace button:where(:not(.button):not(.icon-button):not(.record-title)) {
   border: 1px solid #cfdae7;
   border-radius: 9px;
   background: #fff;
@@ -178,7 +173,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .trade-workspace {
-    padding: 14px;
+    padding: 0;
   }
   .trade-card {
     padding: 16px;
@@ -214,8 +209,6 @@
 }
 .trade-posts-table th,
 .trade-posts-table td {
-  padding: 15px 12px;
-  border-bottom: 1px solid #e6edf5;
   vertical-align: middle;
 }
 .trade-posts-table td:nth-child(2) {
@@ -252,6 +245,7 @@
 }
 .trade-post-dialog .trade-card {
   margin: 0;
+  padding: 0;
   border: 0;
 }
 .trade-dialog-heading {
@@ -265,4 +259,59 @@
   margin: auto;
   position: fixed;
   inset: 0;
+}
+
+.trade-workspace > .trade-tabs {
+  margin: 0;
+}
+.trade-workspace .table-search input {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  color: inherit;
+}
+.trade-posts-panel {
+  min-width: 0;
+}
+.trade-posts-panel .list-toolbar > select {
+  margin-left: auto;
+}
+.trade-post-owner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.trade-post-owner > div {
+  min-width: 0;
+}
+.trade-posts-table .record-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.trade-detail-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.trade-post-dialog .trade-form fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 20px;
+}
+.trade-post-dialog .trade-form legend,
+.trade-post-dialog .trade-form fieldset > p,
+.trade-post-dialog .trade-form fieldset > button {
+  grid-column: 1 / -1;
+}
+.trade-post-dialog .trade-form fieldset > button {
+  justify-self: end;
+}
+@media (max-width: 640px) {
+  .trade-post-dialog .trade-form fieldset {
+    grid-template-columns: 1fr;
+  }
+  .trade-posts-panel .list-toolbar > select {
+    margin-left: 0;
+  }
 }

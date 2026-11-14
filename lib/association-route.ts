@@ -28,7 +28,10 @@ export function resolveAssociationRoute(
     const [, resource, id, action] = segments;
     let methods: string[];
     let prefix = "/localgo/";
-    if (resource === "categories" && segments.length === 2) {
+    if (resource === "resolve-map" && segments.length === 2) {
+      methods = ["POST"];
+      prefix = "/admin/localgo/";
+    } else if (resource === "categories" && segments.length === 2) {
       methods = ["GET", "POST"];
       if (method === "POST") prefix = "/admin/localgo/";
     } else if (resource === "categories" && id && segments.length === 3) {

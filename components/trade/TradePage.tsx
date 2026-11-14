@@ -25,14 +25,16 @@ export default function TradePage() {
     );
   return (
     <AppShell activeHref="/admin/trade">
-      <main className="trade-workspace">
-        <header>
-          <p className="trade-eyebrow">Kết nối cộng đồng hội viên</p>
-          <h1>Giao thương doanh nghiệp</h1>
-          <p>
-            Quản lý cơ hội hợp tác, sản phẩm và dịch vụ của Hội Doanh nghiệp
-            Phường Tân Sơn.
-          </p>
+      <div className="page-stack trade-workspace">
+        <header className="page-heading">
+          <div>
+            <span className="eyebrow">CỘNG ĐỒNG DOANH NGHIỆP</span>
+            <h1>Giao thương doanh nghiệp</h1>
+            <p>
+              Quản lý cơ hội hợp tác, sản phẩm và dịch vụ của Hội Doanh nghiệp
+              Phường Tân Sơn.
+            </p>
+          </div>
         </header>
         <nav className="trade-tabs" aria-label="Quản trị giao thương">
           {tabs.map(([id, label]) => (
@@ -62,7 +64,7 @@ export default function TradePage() {
             }}
           />
         )}
-      </main>
+      </div>
     </AppShell>
   );
 }
