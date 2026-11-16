@@ -1,4 +1,7 @@
 const collections = new Set([
+  "membership-fees",
+  "membership-fee-payments",
+  "membership-fee-dues",
   "members",
   "registrations",
   "news",
@@ -43,12 +46,19 @@ export function resolveAssociationRoute(
     } else if (resource === "places" && id && segments.length === 3) {
       methods = ["GET", "PATCH", "DELETE"];
       if (method === "GET") prefix = "/admin/localgo/";
-    } else if (resource === "places" && id && segments.length === 4 && ["hide", "visibility"].includes(action)) {
+    } else if (
+      resource === "places" &&
+      id &&
+      segments.length === 4 &&
+      ["hide", "visibility"].includes(action)
+    ) {
       methods = ["PATCH"];
       if (action === "hide") prefix = "/admin/localgo/";
     } else return { status: 404 };
     if (!methods.includes(method)) return { status: 405 };
-    return { path: prefix + segments.slice(1).map(encodeURIComponent).join("/") };
+    return {
+      path: prefix + segments.slice(1).map(encodeURIComponent).join("/"),
+    };
   }
   const [collection, id, action, index] = segments;
   if (
@@ -59,7 +69,21 @@ export function resolveAssociationRoute(
     return { status: 404 };
 
   let allowed: string[];
-  if (collection === "introduction-videos") {
+  if (collection === "membership-fees") {
+    if (segments.length === 1) allowed = ["GET", "POST"];
+    else if (segments.length === 2) allowed = ["PATCH"];
+    else if (action === "publish") allowed = ["POST"];
+    else if (action === "dues") allowed = ["GET"];
+    else return { status: 404 };
+  } else if (collection === "membership-fee-payments") {
+    if (segments.length !== 3 || !["confirm", "reject"].includes(action))
+      return { status: 404 };
+    allowed = ["POST"];
+  } else if (collection === "membership-fee-dues") {
+    if (segments.length !== 3 || action !== "manual-payment")
+      return { status: 404 };
+    allowed = ["POST"];
+  } else if (collection === "introduction-videos") {
     if (segments.length === 1) allowed = ["POST"];
     else if (segments.length === 2 && id === "upload") allowed = ["POST"];
     else if (segments.length === 2) allowed = ["DELETE"];
