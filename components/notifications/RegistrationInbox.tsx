@@ -15,6 +15,7 @@ import { getStoredAdminUser } from "@/services/api/authSession";
 interface Notice {
   id: string;
   registrationId?: string;
+  campaignId?: string;
   eventId?: string;
   tradePostId?: string;
   title: string;
@@ -38,9 +39,13 @@ export function RegistrationInboxProvider({
   const [registrationItems, setRegistrationItems] = useState<Notice[]>([]);
   const [eventItems, setEventItems] = useState<Notice[]>([]);
   const [tradeItems, setTradeItems] = useState<Notice[]>([]);
-  const items = [...registrationItems, ...eventItems, ...tradeItems].sort(
-    (a, b) => b.createdAt.localeCompare(a.createdAt),
-  );
+  const [feeItems, setFeeItems] = useState<Notice[]>([]);
+  const items = [
+    ...registrationItems,
+    ...eventItems,
+    ...tradeItems,
+    ...feeItems,
+  ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const [pending, setPending] = useState(0);
   const [readIds, setReadIds] = useState<string[]>([]);
   const [error, setError] = useState("");
@@ -52,7 +57,11 @@ export function RegistrationInboxProvider({
       if (busy || document.visibilityState === "hidden") return;
       busy = true;
       try {
-        const [registrations, events, trades] = await Promise.allSettled([
+        const [fees, registrations, events, trades] = await Promise.allSettled([
+          api.get<{ data: Notice[] }>(
+            "/association/membership-fee-inbox?limit=100",
+            { signal: controller.signal },
+          ),
           api.get<{ data: Notice[]; pendingCount: number }>(
             "/association/registration-inbox?limit=100",
             { signal: controller.signal },
@@ -73,6 +82,7 @@ export function RegistrationInboxProvider({
           }),
         ]);
         if (active) {
+          if (fees.status === "fulfilled") setFeeItems(fees.value.data.data);
           if (registrations.status === "fulfilled") {
             setRegistrationItems(registrations.value.data.data);
             setPending(registrations.value.data.pendingCount);
@@ -94,7 +104,8 @@ export function RegistrationInboxProvider({
                 })),
             );
           setError(
-            trades.status === "rejected" ||
+            fees.status === "rejected" ||
+              trades.status === "rejected" ||
               registrations.status === "rejected" ||
               events.status === "rejected"
               ? "Chưa tải đủ thông báo. Hệ thống sẽ tự thử lại."
@@ -275,13 +286,15 @@ export function RegistrationInboxLink() {
                   (!readIds.includes(item.id) ? " is-unread" : "")
                 }
                 href={
-                  item.href +
-                  (item.tradePostId
-                    ? "?tradePostId=" + encodeURIComponent(item.tradePostId)
-                    : item.eventId
-                      ? "?eventId=" + encodeURIComponent(item.eventId)
-                      : "?registrationId=" +
-                        encodeURIComponent(item.registrationId || ""))
+                  item.campaignId
+                    ? item.href
+                    : item.href +
+                      (item.tradePostId
+                        ? "?tradePostId=" + encodeURIComponent(item.tradePostId)
+                        : item.eventId
+                          ? "?eventId=" + encodeURIComponent(item.eventId)
+                          : "?registrationId=" +
+                            encodeURIComponent(item.registrationId || ""))
                 }
                 onClick={() => {
                   markRead(item.id);
@@ -296,7 +309,9 @@ export function RegistrationInboxLink() {
                   <p>{item.description}</p>
                   <small>
                     <span className={"registration-bell-status " + item.status}>
-                      {labels[item.status]}
+                      {item.campaignId && item.status === "pending"
+                        ? "Chờ xác nhận"
+                        : labels[item.status]}
                     </span>
                     <time>
                       {new Date(item.createdAt).toLocaleString("vi-VN", {
@@ -335,7 +350,9 @@ export default function RegistrationInbox() {
     markRead,
     error,
   } = useContext(Context);
-  const items = allItems.filter((item) => !item.eventId && !item.tradePostId);
+  const items = allItems.filter(
+    (item) => !item.eventId && !item.tradePostId && !item.campaignId,
+  );
   const labels = {
     pending: "Chờ duyệt",
     approved: "Đã duyệt",
@@ -409,4 +426,9 @@ export function useTradeInbox() {
     ...context,
     items: context.items.filter((item) => item.tradePostId),
   };
+}
+
+export function useFeeInbox() {
+  const context = useContext(Context);
+  return { ...context, items: context.items.filter((item) => item.campaignId) };
 }

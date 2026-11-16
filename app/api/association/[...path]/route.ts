@@ -33,8 +33,7 @@ async function handle(request: NextRequest, context: Context) {
 
   try {
     if (
-      ["members", "registrations"].includes(path[0]) &&
-      path[2] === "business-license"
+      (["members", "registrations"].includes(path[0]) && path[2] === "business-license") || (path[0] === "membership-fee-payments" && path[2] === "proof")
     ) {
       const response = await backendRequest(route.path, {
         headers: { Authorization: "Bearer " + token },
@@ -42,7 +41,7 @@ async function handle(request: NextRequest, context: Context) {
       if (!response.ok) return await passResponse(response);
       const type = response.headers.get("content-type") || "";
       if (!/^image\/(jpeg|png|webp)$/.test(type))
-        return json({ message: "Ảnh giấy phép không hợp lệ." }, 502);
+        return json({ message: "Ảnh đính kèm không hợp lệ." }, 502);
       const headers = new Headers({
         "Content-Type": type,
         "Cache-Control": "private, no-store",

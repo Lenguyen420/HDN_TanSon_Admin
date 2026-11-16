@@ -1,4 +1,5 @@
 const collections = new Set([
+  "membership-fee-inbox",
   "membership-fees",
   "membership-fee-payments",
   "membership-fee-dues",
@@ -76,9 +77,12 @@ export function resolveAssociationRoute(
     else if (action === "dues") allowed = ["GET"];
     else return { status: 404 };
   } else if (collection === "membership-fee-payments") {
-    if (segments.length !== 3 || !["confirm", "reject"].includes(action))
+    if (
+      segments.length !== 3 ||
+      !["confirm", "reject", "proof"].includes(action)
+    )
       return { status: 404 };
-    allowed = ["POST"];
+    allowed = action === "proof" ? ["GET"] : ["POST"];
   } else if (collection === "membership-fee-dues") {
     if (segments.length !== 3 || action !== "manual-payment")
       return { status: 404 };
@@ -98,7 +102,11 @@ export function resolveAssociationRoute(
   } else if (collection === "event-files") {
     if (segments.length !== 1) return { status: 404 };
     allowed = ["POST"];
-  } else if (["registration-inbox", "event-inbox"].includes(collection)) {
+  } else if (
+    ["registration-inbox", "event-inbox", "membership-fee-inbox"].includes(
+      collection,
+    )
+  ) {
     if (segments.length !== 1) return { status: 404 };
     allowed = ["GET"];
   } else if (collection === "settings") {

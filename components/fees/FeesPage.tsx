@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { CircleStop, Eye, Pencil, Send } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import {
@@ -12,7 +13,8 @@ import {
 import CampaignEditor from "./CampaignEditor";
 import CampaignDues from "./CampaignDues";
 import styles from "./fees.module.css";
-export default function FeesPage() {
+function FeesWorkspace() {
+  const campaignId = useSearchParams().get("campaignId");
   const [rows, setRows] = useState<FeeCampaign[]>([]),
     [total, setTotal] = useState(0),
     [page, setPage] = useState(1);
@@ -26,6 +28,19 @@ export default function FeesPage() {
   const [editor, setEditor] = useState<{ campaign?: FeeCampaign }>(),
     [selected, setSelected] = useState<FeeCampaign>();
   const [closing, setClosing] = useState<FeeCampaign>();
+  useEffect(() => {
+    if (!campaignId) return;
+    const controller = new AbortController();
+    void api
+      .dues(campaignId, 1, controller.signal)
+      .then((r) => {
+        if (!controller.signal.aborted) setSelected(r.campaign);
+      })
+      .catch((e) => {
+        if (!controller.signal.aborted) setError(e.message);
+      });
+    return () => controller.abort();
+  }, [campaignId]);
   const refresh = () => {
     setLoading(true);
     setRevision((n) => n + 1);
@@ -343,5 +358,19 @@ export default function FeesPage() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+export default function FeesPage() {
+  return (
+    <Suspense
+      fallback={
+        <AppShell activeHref="/admin/fees">
+          <p>Đang tải hội phí…</p>
+        </AppShell>
+      }
+    >
+      <FeesWorkspace />
+    </Suspense>
   );
 }

@@ -1,4 +1,6 @@
 "use client";
+import FeeProofPreview from "./FeeProofPreview";
+import { readSelectedImage } from "@/components/shared/association/ImagePicker";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   membershipFeeApi as api,
@@ -40,9 +42,12 @@ export default function PaymentDialog({
     try {
       if (action === "manual")
         await api.manual(due.id, {
-          transactionRef: String(form.get("transactionRef")),
+          proofImage:
+            (await readSelectedImage(form, "proofImage", {
+              maxBytes: 1024 * 1024,
+            })) || undefined,
           method: String(form.get("method")),
-          proofUrl: String(form.get("proofUrl")),
+
           note: String(form.get("note")),
         });
       else await api.decide(payment!.id, action, String(form.get("note")));
@@ -74,13 +79,8 @@ export default function PaymentDialog({
           </p>
           {payment && (
             <>
-              <p>Mã giao dịch: {payment.transactionRef}</p>
               <p>{payment.note}</p>
-              {payment.proofUrl && (
-                <a href={payment.proofUrl} target="_blank" rel="noreferrer">
-                  Mở minh chứng
-                </a>
-              )}
+              <FeeProofPreview payment={payment} />
             </>
           )}
           {action === "manual" && (
@@ -93,20 +93,11 @@ export default function PaymentDialog({
                 </select>
               </label>
               <label className="form-field">
-                <span>Mã giao dịch / số phiếu thu *</span>
+                <span>Ảnh chứng từ từ thiết bị (tùy chọn)</span>
                 <input
-                  name="transactionRef"
-                  required
-                  maxLength={150}
-                  disabled={busy}
-                />
-              </label>
-              <label className="form-field">
-                <span>Đường dẫn chứng từ (HTTPS)</span>
-                <input
-                  name="proofUrl"
-                  type="url"
-                  pattern="https://.*"
+                  type="file"
+                  name="proofImage:file"
+                  accept="image/jpeg,image/png,image/webp"
                   disabled={busy}
                 />
               </label>

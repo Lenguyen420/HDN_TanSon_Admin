@@ -110,10 +110,11 @@ export const membershipFeeApi = {
   manual: async (
     id: string,
     payload: {
-      transactionRef: string;
+      transactionRef?: string;
+      proofImage?: string;
       method: string;
       note: string;
-      proofUrl: string;
+      proofUrl?: string;
     },
   ) =>
     (

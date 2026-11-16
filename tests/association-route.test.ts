@@ -185,3 +185,20 @@ test("membership fee proxy allows only campaign and payment actions", () => {
   ])
     assert.equal(resolveAssociationRoute("POST", segments).status, 404);
 });
+
+test("fee inbox and private proof proxy are read only", () => {
+  for (const segments of [
+    ["membership-fee-inbox"],
+    ["membership-fee-payments", "payment-1", "proof"],
+  ]) {
+    assert.deepEqual(resolveAssociationRoute("GET", segments), {
+      path: "/admin/" + segments.join("/"),
+    });
+    for (const method of ["POST", "PATCH", "DELETE"])
+      assert.equal(resolveAssociationRoute(method, segments).status, 405);
+  }
+  assert.equal(
+    resolveAssociationRoute("GET", ["membership-fee-inbox", "extra"]).status,
+    404,
+  );
+});

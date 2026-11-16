@@ -1,4 +1,5 @@
 "use client";
+import FeeProofPreview from "./FeeProofPreview";
 import { useEffect, useState } from "react";
 import { Banknote, Check, History, X } from "lucide-react";
 import {
@@ -112,7 +113,7 @@ export default function CampaignDues({
                   "Đã ghi nhận",
                   "Trạng thái",
                   "Ngày đóng",
-                  "Phương thức / mã GD",
+                  "Phương thức",
                   "Thao tác",
                 ].map((t) => (
                   <th
@@ -141,7 +142,6 @@ export default function CampaignDues({
                       : d.paymentMethod
                         ? "Chuyển khoản"
                         : "—"}
-                    <small className={styles.block}>{d.transactionRef}</small>
                   </td>
                   <td>
                     <div className="row-actions">
@@ -252,13 +252,9 @@ export default function CampaignDues({
                 {feeLabels[p.status]} · {feeMoney(p.amount)}
               </strong>
               <p>
-                {p.transactionRef} · {feeDate(p.createdAt)} · {p.note}
+                {feeDate(p.createdAt)} · {p.note}
               </p>
-              {p.proofUrl && (
-                <a href={p.proofUrl} target="_blank" rel="noreferrer">
-                  Xem minh chứng
-                </a>
-              )}
+              <FeeProofPreview payment={p} />
               {p.audit.map((a, i) => (
                 <p key={i}>
                   {a.action} · {a.actorId} ·{" "}
