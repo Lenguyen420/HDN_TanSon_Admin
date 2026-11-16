@@ -36,6 +36,7 @@ export interface Partner {
   contributionCount: number;
   contributions?: Contribution[];
   selectedContribution?: Contribution | null;
+  notification?: { status: string; sentAt?: string };
   audit?: Audit[];
 }
 export type PartnerPayload = Pick<
@@ -48,7 +49,7 @@ export type PartnerPayload = Pick<
   | "website"
   | "memberId"
   | "isPublished"
->;
+> & { sendNotification?: boolean };
 export type ContributionPayload = Omit<
   Contribution,
   "id" | "partnerId" | "notification" | "audit"

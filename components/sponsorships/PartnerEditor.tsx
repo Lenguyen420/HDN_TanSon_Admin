@@ -31,7 +31,9 @@ export default function PartnerEditor({
     [error, setError] = useState("");
   const [kind, setKind] = useState(contribution?.type || "money");
   const [published, setPublished] = useState(
-    (mode === "partner" ? partner : contribution)?.isPublished || false,
+    mode === "partner"
+      ? (partner?.isPublished ?? false)
+      : (contribution?.isPublished ?? partner?.isPublished ?? false),
   );
   useEffect(() => {
     dialog.current?.showModal();
@@ -55,6 +57,7 @@ export default function PartnerEditor({
           address: text("address"),
           website: text("website"),
           memberId: text("memberId") || null,
+          sendNotification: published && form.get("sendNotification") === "on",
           isPublished: published,
         };
         if (partner) await api.update(partner.id, payload);
@@ -324,22 +327,34 @@ export default function PartnerEditor({
               />{" "}
               Công khai trên Mini App
             </label>
-            {mode === "contribution" && (
+            {(mode === "contribution" || !!partner) && (
               <label>
                 <input
                   name="sendNotification"
                   type="checkbox"
+                  defaultChecked={mode === "contribution" && !contribution}
                   disabled={
                     !published ||
-                    !partner?.isPublished ||
-                    contribution?.notification?.status === "sent"
+                    (mode === "contribution" && !partner?.isPublished) ||
+                    (mode === "partner"
+                      ? partner?.notification?.status
+                      : contribution?.notification?.status) === "sent"
                   }
                 />{" "}
                 Gửi thông báo nội bộ{" "}
-                {contribution?.notification?.status === "sent"
+                {(mode === "partner"
+                  ? partner?.notification?.status
+                  : contribution?.notification?.status) === "sent"
                   ? "(đã gửi)"
                   : ""}
               </label>
+            )}
+            {mode === "partner" && (
+              <p className={styles.hint}>
+                Công bố lần đầu sẽ tự gửi thông báo giới thiệu đơn vị đến hộp
+                thư của mọi người trên Mini App. Để ghi nhận đã tài trợ gì, lưu
+                đơn vị rồi chọn “Thêm khoản đóng góp”.
+              </p>
             )}
             {mode === "contribution" && !partner?.isPublished && (
               <p className={styles.hint}>

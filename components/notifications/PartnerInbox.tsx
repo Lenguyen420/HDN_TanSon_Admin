@@ -9,7 +9,7 @@ interface Notice {
   title: string;
   description: string;
   partnerId: string;
-  contributionId: string;
+  contributionId?: string;
   date: string;
   time: string;
 }
@@ -62,14 +62,14 @@ export default function PartnerInbox() {
       aria-labelledby="partner-inbox-title"
     >
       <h2 id="partner-inbox-title">Thông báo đơn vị đồng hành ({total})</h2>
-      <p>Các khoản đóng góp đã được chọn gửi thông báo nội bộ.</p>
+      <p>Thông báo giới thiệu đơn vị mới và các khoản đóng góp đã công bố.</p>
       {error && <p role="status">{error}</p>}
       {!items.length && !error && <p>Chưa có thông báo.</p>}
       {items.map((n) => (
         <Link
           className={styles.contribution}
           key={n.id}
-          href={`/admin/sponsorships?partnerId=${encodeURIComponent(n.partnerId)}&contributionId=${encodeURIComponent(n.contributionId)}`}
+          href={`/admin/sponsorships?partnerId=${encodeURIComponent(n.partnerId)}${n.contributionId ? "&contributionId=" + encodeURIComponent(n.contributionId) : ""}`}
         >
           <strong>{n.title}</strong>
           <span>{n.description}</span>

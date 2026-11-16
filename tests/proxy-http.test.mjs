@@ -13,6 +13,12 @@ test(
     let imageReads = 0;
     const imagePath =
       "/uploads/banners/00000000-0000-4000-8000-000000000002.webp";
+    const partnerImagePath =
+      "/uploads/partners/00000000-0000-4000-8000-000000000004.png";
+    const partnerImageBytes = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJ1kAAAAASUVORK5CYII=",
+      "base64",
+    );
     const fileBytes = Buffer.from([
       37, 80, 68, 70, 45, 49, 46, 52, 10, 0, 255, 128,
     ]);
@@ -26,11 +32,26 @@ test(
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const bytes = Buffer.concat(chunks);
-      if (req.url === "/uploads/localgo/00000000-0000-4000-8000-000000000003.png") {
+      if (req.url === partnerImagePath) {
+        res.writeHead(200, {
+          "Content-Type": "image/png",
+          "Content-Length": String(partnerImageBytes.length),
+        });
+        return res.end(req.method === "HEAD" ? undefined : partnerImageBytes);
+      }
+      if (
+        req.url === "/uploads/localgo/00000000-0000-4000-8000-000000000003.png"
+      ) {
         res.writeHead(200, { "Content-Type": "image/png" });
         return res.end(licenseBytes);
       }
-      if (["/api/v1/localgo/places/deleted-place", "/api/v1/admin/localgo/categories/deleted-category"].includes(req.url) && req.method === "DELETE") {
+      if (
+        [
+          "/api/v1/localgo/places/deleted-place",
+          "/api/v1/admin/localgo/categories/deleted-category",
+        ].includes(req.url) &&
+        req.method === "DELETE"
+      ) {
         assert.equal(req.headers.authorization, "Bearer test-access");
         res.writeHead(204);
         return res.end();
@@ -238,34 +259,121 @@ test(
         assert.equal(received.at(-1).auth, "Bearer test-access");
       }
       for (const [method, path, body, backendPath] of [
-        ["POST", "/localgo/resolve-map", { url: "https://www.google.com/maps?q=10.815,106.63" }, "/admin/localgo/resolve-map"],
+        [
+          "POST",
+          "/localgo/resolve-map",
+          { url: "https://www.google.com/maps?q=10.815,106.63" },
+          "/admin/localgo/resolve-map",
+        ],
         ["GET", "/localgo/categories", undefined, "/localgo/categories"],
-        ["POST", "/localgo/categories", { code: "the-thao", name: "Thể thao" }, "/admin/localgo/categories"],
-        ["PATCH", "/localgo/categories/the-thao", { name: "Thể thao mới" }, "/admin/localgo/categories/the-thao"],
-        ["GET", "/localgo/places?category=an-uong&page=1&limit=20", undefined, "/admin/localgo/places?category=an-uong&page=1&limit=20"],
+        [
+          "POST",
+          "/localgo/categories",
+          { code: "the-thao", name: "Thể thao" },
+          "/admin/localgo/categories",
+        ],
+        [
+          "PATCH",
+          "/localgo/categories/the-thao",
+          { name: "Thể thao mới" },
+          "/admin/localgo/categories/the-thao",
+        ],
+        [
+          "GET",
+          "/localgo/places?category=an-uong&page=1&limit=20",
+          undefined,
+          "/admin/localgo/places?category=an-uong&page=1&limit=20",
+        ],
         ["GET", "/localgo/places/id", undefined, "/admin/localgo/places/id"],
         ["POST", "/localgo/places", { name: "Địa điểm" }, "/localgo/places"],
-        ["PATCH", "/localgo/places/id", { location: { type: "Point", coordinates: [106.63, 10.815] } }, "/localgo/places/id"],
-        ["PATCH", "/localgo/places/id/hide", { reason: "Tạm ngưng" }, "/admin/localgo/places/id/hide"],
-        ["PATCH", "/localgo/places/id/visibility", { isVisible: true }, "/localgo/places/id/visibility"],
+        [
+          "PATCH",
+          "/localgo/places/id",
+          { location: { type: "Point", coordinates: [106.63, 10.815] } },
+          "/localgo/places/id",
+        ],
+        [
+          "PATCH",
+          "/localgo/places/id/hide",
+          { reason: "Tạm ngưng" },
+          "/admin/localgo/places/id/hide",
+        ],
+        [
+          "PATCH",
+          "/localgo/places/id/visibility",
+          { isVisible: true },
+          "/localgo/places/id/visibility",
+        ],
       ]) {
-        assert.equal((await call("/api/association" + path, method, body)).status, 200);
+        assert.equal(
+          (await call("/api/association" + path, method, body)).status,
+          200,
+        );
         assert.equal(received.at(-1).path, "/api/v1" + backendPath);
         assert.equal(received.at(-1).method, method);
         assert.equal(received.at(-1).auth, "Bearer test-access");
         assert.deepEqual(received.at(-1).body, body);
       }
-      const deleted = await call("/api/association/localgo/places/deleted-place", "DELETE");
+      const deleted = await call(
+        "/api/association/localgo/places/deleted-place",
+        "DELETE",
+      );
       assert.equal(deleted.status, 204);
       assert.equal(await deleted.text(), "");
-      const deletedCategory = await call("/api/association/localgo/categories/deleted-category", "DELETE");
+      const deletedCategory = await call(
+        "/api/association/localgo/categories/deleted-category",
+        "DELETE",
+      );
       assert.equal(deletedCategory.status, 204);
       assert.equal(await deletedCategory.text(), "");
-      assert.equal((await call("/api/association/localgo/categories", "PUT", {})).status, 405);
-      assert.equal((await call("/api/association/localgo/categories", "POST", {}, { Cookie: "" })).status, 401);
-      assert.equal((await call("/api/association/localgo/categories/the-thao", "DELETE", undefined, { Origin: "https://untrusted.example" })).status, 403);
-      assert.equal((await call("/api/association/localgo/places/id", "PATCH", {}, { Origin: "https://untrusted.example" })).status, 403);
-      assert.equal((await call("/api/association/localgo/places/id", "PATCH", {}, { Cookie: "" })).status, 401);
+      assert.equal(
+        (await call("/api/association/localgo/categories", "PUT", {})).status,
+        405,
+      );
+      assert.equal(
+        (
+          await call(
+            "/api/association/localgo/categories",
+            "POST",
+            {},
+            { Cookie: "" },
+          )
+        ).status,
+        401,
+      );
+      assert.equal(
+        (
+          await call(
+            "/api/association/localgo/categories/the-thao",
+            "DELETE",
+            undefined,
+            { Origin: "https://untrusted.example" },
+          )
+        ).status,
+        403,
+      );
+      assert.equal(
+        (
+          await call(
+            "/api/association/localgo/places/id",
+            "PATCH",
+            {},
+            { Origin: "https://untrusted.example" },
+          )
+        ).status,
+        403,
+      );
+      assert.equal(
+        (
+          await call(
+            "/api/association/localgo/places/id",
+            "PATCH",
+            {},
+            { Cookie: "" },
+          )
+        ).status,
+        401,
+      );
       const banner = {
         image: "uploads/banners/existing.webp",
         alt: "Updated",
@@ -338,10 +446,44 @@ test(
         1,
         "immutable images are reused from the admin server cache",
       );
-      const localGoImage = await fetch(base + "/uploads/localgo/00000000-0000-4000-8000-000000000003.png");
+      const localGoImage = await fetch(
+        base + "/uploads/localgo/00000000-0000-4000-8000-000000000003.png",
+      );
       assert.equal(localGoImage.status, 200);
       assert.equal(localGoImage.headers.get("content-type"), "image/png");
-      assert.deepEqual(Buffer.from(await localGoImage.arrayBuffer()), licenseBytes);
+      assert.deepEqual(
+        Buffer.from(await localGoImage.arrayBuffer()),
+        licenseBytes,
+      );
+      // Both partner logos and contribution photos use the partners upload folder.
+      const partnerImage = await fetch(base + partnerImagePath);
+      assert.equal(partnerImage.status, 200);
+      assert.equal(partnerImage.headers.get("content-type"), "image/png");
+      assert.deepEqual(
+        Buffer.from(await partnerImage.arrayBuffer()),
+        partnerImageBytes,
+      );
+      const partnerHead = await fetch(base + partnerImagePath, {
+        method: "HEAD",
+      });
+      assert.equal(partnerHead.status, 200);
+      assert.equal(
+        partnerHead.headers.get("content-length"),
+        String(partnerImageBytes.length),
+      );
+      assert.equal((await partnerHead.arrayBuffer()).byteLength, 0);
+      assert.equal(
+        (await fetch(base + "/uploads/partners/invalid.png")).status,
+        404,
+      );
+      assert.equal(
+        (
+          await fetch(
+            base + "/uploads/private/00000000-0000-4000-8000-000000000004.png",
+          )
+        ).status,
+        404,
+      );
       const videoRange = await fetch(
         base + `/uploads/introduction-videos/${fileId}`,
         { headers: { Range: "bytes=2-5" } },

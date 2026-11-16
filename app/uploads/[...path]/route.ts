@@ -22,7 +22,15 @@ async function handle(request: NextRequest, context: Context) {
     !isVideo &&
     !isFile &&
     (path.length !== 2 ||
-      !["news", "events", "member-visits", "banners", "members", "localgo"].includes(path[0]) ||
+      ![
+        "news",
+        "events",
+        "member-visits",
+        "banners",
+        "members",
+        "localgo",
+        "partners",
+      ].includes(path[0]) ||
       !/^[a-f0-9-]{36}\.(jpg|png|webp)$/.test(path[1]))
   )
     return json({ message: "Không tìm thấy ảnh." }, 404);

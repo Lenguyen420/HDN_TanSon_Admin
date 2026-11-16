@@ -518,6 +518,17 @@ function SponsorshipsWorkspace({
                       <td>
                         <div className={styles.actions}>
                           <button
+                            className="button button-primary"
+                            disabled={busy}
+                            onClick={() => {
+                              setSelectedId(row.id);
+                              setHistoryPage(1);
+                              setEditor({ mode: "contribution", partner: row });
+                            }}
+                          >
+                            + Thêm khoản đóng góp
+                          </button>
+                          <button
                             className="button button-secondary"
                             onClick={() =>
                               setEditor({ mode: "partner", partner: row })
