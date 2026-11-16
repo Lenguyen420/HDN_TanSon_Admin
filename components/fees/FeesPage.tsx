@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { CircleStop, Eye, Pencil, Send } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import {
   membershipFeeApi as api,
@@ -204,7 +205,14 @@ export default function FeesPage() {
                         "Trạng thái",
                         "Thao tác",
                       ].map((s) => (
-                        <th key={s}>{s}</th>
+                        <th
+                          key={s}
+                          className={
+                            s === "Thao tác" ? "action-heading" : undefined
+                          }
+                        >
+                          {s}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -240,37 +248,50 @@ export default function FeesPage() {
                           </span>
                         </td>
                         <td>
-                          <div className={styles.actions}>
+                          <div className="row-actions">
                             <button
-                              className="button button-secondary"
+                              type="button"
+                              className="icon-button"
+                              title="Xem chi tiết"
+                              aria-label={`Xem ${c.title}`}
                               onClick={() => setSelected(c)}
                             >
-                              Chi tiết
+                              <Eye size={16} />
                             </button>
                             {c.status !== "closed" && (
                               <button
-                                className="button button-secondary"
+                                type="button"
+                                className="icon-button"
+                                title="Chỉnh sửa"
+                                aria-label={`Sửa ${c.title}`}
+                                disabled={busy}
                                 onClick={() => setEditor({ campaign: c })}
                               >
-                                Sửa
+                                <Pencil size={16} />
                               </button>
                             )}
                             {c.status === "draft" && (
                               <button
-                                className="button button-primary"
+                                type="button"
+                                className="icon-button approve-button"
+                                title="Công bố đợt thu"
+                                aria-label={`Công bố ${c.title}`}
                                 disabled={busy}
                                 onClick={() => void act(c)}
                               >
-                                Công bố
+                                <Send size={16} />
                               </button>
                             )}
                             {c.status === "published" && (
                               <button
-                                className="button button-secondary"
+                                type="button"
+                                className="icon-button danger-button"
+                                title="Ngừng thu"
+                                aria-label={`Ngừng thu ${c.title}`}
                                 disabled={busy}
                                 onClick={() => setClosing(c)}
                               >
-                                Ngừng thu
+                                <CircleStop size={16} />
                               </button>
                             )}
                           </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Banknote, Check, History, X } from "lucide-react";
 import {
   membershipFeeApi as api,
   feeDate,
@@ -114,7 +115,12 @@ export default function CampaignDues({
                   "Phương thức / mã GD",
                   "Thao tác",
                 ].map((t) => (
-                  <th key={t}>{t}</th>
+                  <th
+                    key={t}
+                    className={t === "Thao tác" ? "action-heading" : undefined}
+                  >
+                    {t}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -138,22 +144,29 @@ export default function CampaignDues({
                     <small className={styles.block}>{d.transactionRef}</small>
                   </td>
                   <td>
-                    <div className={styles.actions}>
+                    <div className="row-actions">
                       <button
-                        className="button button-secondary"
+                        type="button"
+                        className="icon-button"
+                        title="Xem lịch sử"
+                        aria-label={`Xem lịch sử của ${d.member.name}`}
+                        aria-expanded={detail?.id === d.id}
                         onClick={() =>
                           setDetail(detail?.id === d.id ? undefined : d)
                         }
                       >
-                        Lịch sử
+                        <History size={16} />
                       </button>
                       {d.status === "pending_confirmation" &&
                         d.payments
                           .filter((p) => p.status === "pending")
                           .map((p) => (
-                            <span key={p.id}>
+                            <span className="row-actions" key={p.id}>
                               <button
-                                className="button button-primary"
+                                type="button"
+                                className="icon-button approve-button"
+                                title="Xác nhận thanh toán"
+                                aria-label={`Xác nhận thanh toán của ${d.member.name}`}
                                 onClick={() =>
                                   setAction({
                                     due: d,
@@ -162,10 +175,13 @@ export default function CampaignDues({
                                   })
                                 }
                               >
-                                Xác nhận
-                              </button>{" "}
+                                <Check size={16} />
+                              </button>
                               <button
-                                className="button button-secondary"
+                                type="button"
+                                className="icon-button danger-button"
+                                title="Từ chối minh chứng"
+                                aria-label={`Từ chối minh chứng của ${d.member.name}`}
                                 onClick={() =>
                                   setAction({
                                     due: d,
@@ -174,19 +190,22 @@ export default function CampaignDues({
                                   })
                                 }
                               >
-                                Từ chối
+                                <X size={16} />
                               </button>
                             </span>
                           ))}
                       {campaign.status === "published" &&
                         ["unpaid", "overdue"].includes(d.status) && (
                           <button
-                            className="button button-primary"
+                            type="button"
+                            className="icon-button approve-button"
+                            title="Ghi nhận thu thủ công"
+                            aria-label={`Ghi nhận thu của ${d.member.name}`}
                             onClick={() =>
                               setAction({ due: d, action: "manual" })
                             }
                           >
-                            Ghi nhận thu
+                            <Banknote size={16} />
                           </button>
                         )}
                     </div>
