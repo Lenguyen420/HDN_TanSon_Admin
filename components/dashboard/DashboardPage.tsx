@@ -125,7 +125,7 @@ export default function DashboardPage() {
           </div>
           <div className="welcome-photo">
             <Image
-              src="/association/3.jpg"
+              src="/association/banner.jpg"
               alt="Hoạt động kết nối của Hội Doanh nghiệp"
               fill
               priority
