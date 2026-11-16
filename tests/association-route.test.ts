@@ -202,3 +202,53 @@ test("fee inbox and private proof proxy are read only", () => {
     404,
   );
 });
+
+test("partner proxy supports management and statistics while rejecting undeclared writes", () => {
+  for (const [method, segments, path] of [
+    ["GET", ["partners"], "/admin/partners"],
+    ["POST", ["partners"], "/admin/partners"],
+    ["GET", ["partners", "statistics"], "/admin/partners/statistics"],
+    ["PATCH", ["partners", "unit"], "/admin/partners/unit"],
+    ["DELETE", ["partners", "unit"], "/admin/partners/unit"],
+    [
+      "POST",
+      ["partners", "unit", "contributions"],
+      "/admin/partners/unit/contributions",
+    ],
+    ["PATCH", ["contributions", "entry"], "/admin/contributions/entry"],
+    ["DELETE", ["contributions", "entry"], "/admin/contributions/entry"],
+  ] as const)
+    assert.deepEqual(resolveAssociationRoute(method, [...segments]), { path });
+  assert.equal(
+    resolveAssociationRoute("POST", ["partners", "statistics"]).status,
+    405,
+  );
+  assert.equal(
+    resolveAssociationRoute("GET", ["partners", "unit", "contributions"])
+      .status,
+    405,
+  );
+  assert.equal(resolveAssociationRoute("POST", ["contributions"]).status, 404);
+  assert.equal(
+    resolveAssociationRoute("GET", ["contributions", "entry"]).status,
+    405,
+  );
+  assert.equal(
+    resolveAssociationRoute("PATCH", ["partners", "unit", "unknown"]).status,
+    404,
+  );
+});
+
+test("notification feed proxy reuses the public inbox and permits reads only", () => {
+  assert.deepEqual(resolveAssociationRoute("GET", ["notification-feed"]), {
+    path: "/public/notification-feed",
+  });
+  assert.equal(
+    resolveAssociationRoute("POST", ["notification-feed"]).status,
+    405,
+  );
+  assert.equal(
+    resolveAssociationRoute("GET", ["notification-feed", "id"]).status,
+    404,
+  );
+});

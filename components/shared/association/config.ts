@@ -439,23 +439,23 @@ export const navigation = [
     group: "Nội dung & hoạt động",
   },
   {
-    label: "Hội phí",
+    label: "Theo dõi thu chi",
     href: "/admin/fees",
     icon: Wallet,
     group: "Hội phí & đóng góp",
   },
   {
-    label: "Lịch sử tham gia",
-    href: "/admin/activities",
+    label: "Đơn vị đồng hành",
+    href: "/admin/sponsorships",
     icon: ClipboardCheck,
     group: "Hội phí & đóng góp",
   },
-  {
-    label: "Tài trợ",
-    href: "/admin/sponsorships",
-    icon: HeartHandshake,
-    group: "Hội phí & đóng góp",
-  },
+  // {
+  //   label: "Tài trợ",
+  //   href: "/admin/sponsorships",
+  //   icon: HeartHandshake,
+  //   group: "Hội phí & đóng góp",
+  // },
   {
     label: "Thông tin Hội",
     href: "/admin/settings",

@@ -3,6 +3,8 @@ const collections = new Set([
   "membership-fees",
   "membership-fee-payments",
   "membership-fee-dues",
+  "partners",
+  "contributions",
   "members",
   "registrations",
   "news",
@@ -25,6 +27,12 @@ export function resolveAssociationRoute(
   method: string,
   segments: string[],
 ): RouteResult {
+  if (segments[0] === "notification-feed") {
+    if (segments.length !== 1) return { status: 404 };
+    return method === "GET"
+      ? { path: "/public/notification-feed" }
+      : { status: 405 };
+  }
   // LocalGo uses admin reads and shared authenticated writes in Backend.
   if (segments[0] === "localgo") {
     if (segments.some((part) => !/^[a-zA-Z0-9_-]{1,100}$/.test(part)))
@@ -70,7 +78,16 @@ export function resolveAssociationRoute(
     return { status: 404 };
 
   let allowed: string[];
-  if (collection === "membership-fees") {
+  if (collection === "partners") {
+    if (segments.length === 1) allowed = ["GET", "POST"];
+    else if (segments.length === 2 && id === "statistics") allowed = ["GET"];
+    else if (segments.length === 2) allowed = ["GET", "PATCH", "DELETE"];
+    else if (action === "contributions") allowed = ["POST"];
+    else return { status: 404 };
+  } else if (collection === "contributions") {
+    if (segments.length !== 2) return { status: 404 };
+    allowed = ["PATCH", "DELETE"];
+  } else if (collection === "membership-fees") {
     if (segments.length === 1) allowed = ["GET", "POST"];
     else if (segments.length === 2) allowed = ["PATCH"];
     else if (action === "publish") allowed = ["POST"];
