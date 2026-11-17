@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
+import { useDashboardFinance } from "./useDashboardFinance";
 import { imageUrl } from "@/services/image-url";
 import Link from "next/link";
 import {
@@ -31,17 +32,14 @@ export default function DashboardPage() {
   });
   const collections = data?.collections;
   const members = collections?.members || [];
-  const fees = collections?.fees || [];
-  const paid = fees
-    .filter((item) => item.status === "paid")
-    .reduce((sum, item) => sum + Number(item.amount), 0);
-  const unpaid = fees
-    .filter((item) => item.status === "pending")
-    .reduce((sum, item) => sum + Number(item.amount), 0);
-  const sponsorship =
-    collections?.sponsorships
-      .filter((item) => item.status === "Đã ghi nhận")
-      .reduce((sum, item) => sum + Number(item.amount), 0) || 0;
+  const finance = useDashboardFinance();
+  const fees = finance.fees.data;
+  const sponsorships = finance.sponsorships.data;
+  const paid = fees?.paidAmount ?? 0;
+  const unpaid = fees?.remainingAmount ?? 0;
+  const financeErrors = [finance.fees.error, finance.sponsorships.error].filter(
+    Boolean,
+  );
   const upcoming = (collections?.events || [])
     .filter(
       (item) =>
@@ -67,8 +65,12 @@ export default function DashboardPage() {
     },
     {
       label: "Hội phí đã thu",
-      value: data ? money(paid) : "—",
-      note: `${fees.filter((item) => item.status === "paid").length} khoản đã thanh toán`,
+      value: fees ? money(paid) : "—",
+      note: fees
+        ? `${fees.paidCount} khoản đã thanh toán`
+        : finance.fees.error
+          ? "Chưa tải được số liệu"
+          : "Đang tải số liệu…",
       icon: Wallet,
       tone: "green",
       href: "/admin/fees",
@@ -83,8 +85,14 @@ export default function DashboardPage() {
     },
     {
       label: "Giá trị tài trợ",
-      value: data ? money(sponsorship) : "—",
-      note: "Tiền mặt và hiện vật quy đổi",
+      value: sponsorships
+        ? money(sponsorships.totalAmount + sponsorships.estimatedValue)
+        : "—",
+      note: sponsorships
+        ? "Tiền và giá trị hiện vật công khai"
+        : finance.sponsorships.error
+          ? "Chưa tải được số liệu"
+          : "Đang tải số liệu…",
       icon: HeartHandshake,
       tone: "orange",
       href: "/admin/sponsorships",
@@ -140,6 +148,11 @@ export default function DashboardPage() {
         {error && (
           <p className="error-message" role="alert">
             {error}
+          </p>
+        )}
+        {financeErrors.length > 0 && (
+          <p className="error-message" role="alert">
+            {financeErrors.join(" ")}
           </p>
         )}
         <section className="stats-grid" aria-label="Số liệu tổng quan">
@@ -364,28 +377,32 @@ export default function DashboardPage() {
                     <ArrowDownLeft size={15} />
                     Đã thu
                   </span>
-                  <strong>{money(paid)}</strong>
+                  <strong>{fees ? money(paid) : "—"}</strong>
                 </div>
                 <div>
                   <span>
                     <ArrowUpRight size={15} />
                     Chờ thanh toán
                   </span>
-                  <strong>{money(unpaid)}</strong>
+                  <strong>{fees ? money(unpaid) : "—"}</strong>
                 </div>
               </div>
-              <div
-                className="fee-progress"
-                role="progressbar"
-                aria-label="Tỷ lệ hội phí đã thu"
-                aria-valuenow={Math.round((paid / (paid + unpaid || 1)) * 100)}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <span
-                  style={{ width: `${(paid / (paid + unpaid || 1)) * 100}%` }}
-                />
-              </div>
+              {fees && (
+                <div
+                  className="fee-progress"
+                  role="progressbar"
+                  aria-label="Tỷ lệ hội phí đã thu"
+                  aria-valuenow={Math.round(
+                    (paid / (paid + unpaid || 1)) * 100,
+                  )}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <span
+                    style={{ width: `${(paid / (paid + unpaid || 1)) * 100}%` }}
+                  />
+                </div>
+              )}
               <Link className="text-link" href="/admin/fees" prefetch={false}>
                 Xem chi tiết khoản thu <ArrowRight size={14} />
               </Link>
@@ -412,9 +429,9 @@ export default function DashboardPage() {
         <div className="local-data-note">
           <span className="live-dot" />
           <p>
-            Số liệu hội viên, hồ sơ đăng ký và nội dung lấy từ hệ thống. Hội
-            phí, tài trợ và lịch sử tham gia lấy từ dữ liệu trên trình duyệt
-            này.
+            Số liệu được lấy từ hệ thống. Hội phí đã thu chỉ tính các khoản đã
+            xác nhận. Giá trị tài trợ gồm tiền và giá trị hiện vật ước tính của
+            các khoản công khai thuộc đơn vị công khai.
           </p>
         </div>
       </div>
