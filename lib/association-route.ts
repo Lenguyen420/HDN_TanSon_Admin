@@ -15,6 +15,7 @@ const collections = new Set([
   "settings",
   "registration-inbox",
   "event-inbox",
+  "event-participations",
   "event-files",
   "introduction-videos",
 ]);
@@ -120,9 +121,12 @@ export function resolveAssociationRoute(
     if (segments.length !== 1) return { status: 404 };
     allowed = ["POST"];
   } else if (
-    ["registration-inbox", "event-inbox", "membership-fee-inbox"].includes(
-      collection,
-    )
+    [
+      "registration-inbox",
+      "event-inbox",
+      "event-participations",
+      "membership-fee-inbox",
+    ].includes(collection)
   ) {
     if (segments.length !== 1) return { status: 404 };
     allowed = ["GET"];

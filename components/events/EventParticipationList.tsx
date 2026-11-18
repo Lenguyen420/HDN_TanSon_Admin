@@ -16,6 +16,7 @@ import api from "@/services/api/axiosConfig";
 interface Participant {
   id: string;
   name: string;
+  eventTitle?: string | null;
   company: string;
   registeredAt: string | null;
   checkedAt: string | null;
@@ -56,8 +57,10 @@ function ParticipantTime({
 export default function EventParticipationList({
   eventId,
 }: {
-  eventId: string;
+  eventId?: string;
 }) {
+  const showEvent = eventId === undefined;
+  const columnCount = showEvent ? 7 : 6;
   const [items, setItems] = useState<Participant[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -79,7 +82,9 @@ export default function EventParticipationList({
           data: Participant[];
           pagination: { total: number };
         }>(
-          "/association/events/" + encodeURIComponent(eventId) + "/attendance",
+          eventId === undefined
+            ? "/association/event-participations"
+            : "/association/events/" + encodeURIComponent(eventId) + "/attendance",
           { params: { page, limit: PAGE_SIZE }, signal: controller.signal },
         );
         if (active) {
@@ -154,6 +159,7 @@ export default function EventParticipationList({
             <tr>
               <th scope="col">STT</th>
               <th scope="col">Họ và tên</th>
+              {showEvent && <th scope="col">Sự kiện</th>}
               <th scope="col">Đơn vị</th>
               <th scope="col">Trạng thái</th>
               <th scope="col">Đăng ký lúc</th>
@@ -163,7 +169,7 @@ export default function EventParticipationList({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6}>
+                <td colSpan={columnCount}>
                   <div className="participation-empty" role="status">
                     <LoaderCircle size={22} className="animate-spin" />
                     <p>Đang tải danh sách…</p>
@@ -197,6 +203,7 @@ export default function EventParticipationList({
                         <span>{item.name || "Chưa có tên"}</span>
                       </div>
                     </th>
+                    {showEvent && <td>{item.eventTitle ?? "Không tìm thấy sự kiện"}</td>}
                     <td className="participation-company">
                       {item.company || (
                         <span className="participation-muted">
@@ -226,7 +233,7 @@ export default function EventParticipationList({
               })
             ) : (
               <tr>
-                <td colSpan={6}>
+                <td colSpan={columnCount}>
                   <div className="participation-empty">
                     <Users size={28} />
                     <p>
