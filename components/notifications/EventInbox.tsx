@@ -9,6 +9,7 @@ interface EventNotice {
   eventId: string;
   title: string;
   description: string;
+  status: "registered" | "absent";
   createdAt: string;
   href: string;
 }
@@ -71,10 +72,9 @@ export default function EventInbox() {
         background: "white",
       }}
     >
-      <h2 id="event-inbox-heading">Vắng mặt tại sự kiện ({total})</h2>
-      <p>Người đã chọn tham gia nhưng chưa điểm danh khi sự kiện kết thúc.</p>
+      <h2 id="event-inbox-heading">Thông báo sự kiện ({total})</h2>
       {error && <p role="status">{error}</p>}
-      {!items.length && !error && <p>Chưa có trường hợp vắng mặt.</p>}
+      {!items.length && !error && <p>Chưa có thông báo sự kiện.</p>}
       {items.map((item) => (
         <Link
           key={item.id}
@@ -97,7 +97,7 @@ export default function EventInbox() {
             {new Date(item.createdAt).toLocaleString("vi-VN", {
               timeZone: "Asia/Ho_Chi_Minh",
             })}{" "}
-            · Vắng mặt
+            · {item.status === "registered" ? "Đã đăng ký" : "Vắng mặt"}
           </small>
         </Link>
       ))}

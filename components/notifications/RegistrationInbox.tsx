@@ -20,7 +20,7 @@ interface Notice {
   tradePostId?: string;
   title: string;
   description: string;
-  status: "pending" | "approved" | "rejected" | "absent";
+  status: "pending" | "approved" | "rejected" | "registered" | "absent";
   createdAt: string;
   href: string;
 }
@@ -203,6 +203,7 @@ export function RegistrationInboxLink() {
     approved: "Đã duyệt",
     rejected: "Đã từ chối",
     absent: "Vắng mặt",
+    registered: "Đã đăng ký",
   };
   return (
     <div className="registration-bell" ref={container}>
@@ -358,6 +359,7 @@ export default function RegistrationInbox() {
     approved: "Đã duyệt",
     rejected: "Đã từ chối",
     absent: "Vắng mặt",
+    registered: "Đã đăng ký",
   };
   return (
     <section
